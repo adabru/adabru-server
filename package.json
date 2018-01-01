@@ -1,0 +1,22 @@
+{
+  "name": "adabru-server",
+  "version": "1.0.0",
+  "description": "logging, (re)starting, constraining, routing, serving, CI",
+  "main": "cli.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adabru/adabru-server.git"
+  },
+  "author": "adabru",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/adabru/adabru-server/issues"
+  },
+  "homepage": "https://github.com/adabru/adabru-server#readme",
+  "devDependencies": {
+    "livescript": "^1.5.0"
+  }
+}
