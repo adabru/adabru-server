@@ -44,7 +44,7 @@ supervisor = new
   @start = ({logname, args, script, cwd, logport}) ->
     cwd ?= '.'
     args ?= ''
-    child_log = child_process.spawn 'ablog', ["pipe", logname, logport], stdio: ['pipe', 'ignore', 'ignore']
+    child_log = child_process.spawn 'node', ['./logpipe.js', logname, logport], stdio: ['pipe', 'ignore', 'ignore']
       ..unref!
     _args = switch
       case typeof args is 'string' then args.split ' '

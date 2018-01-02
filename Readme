@@ -1,0 +1,150 @@
+[TOC]
+
+# Server
+
+📍 Server
+- public repo at [github](https://github.com/adabru/adabru-server)
+- one server multiple domains / reverse proxy
+- [logging](./Log), (re)starting, constraining, routing, serving
+
+## System Overview
+
+![design](design.svg?download)
+
+## Serving
+
+- least downtime as possible
+- reliable and convenient updates
+
+### Process Management
+
+Services are organised in separate node processes communicating via pipes, tcp and http.
+
+- process-splitting to reduce restart time and failure zone
+- auto update on git push, via webhooks
+  - new process is started listening on new port
+  - port is switched via router script (iptables would require root)
+  - old process is killed
+- single processes are limited by cgroups to ensure most important processes keep running
+- cli and web frontend for monitoring, (re)starting, stopping, switching the processes
+
+
+### Services
+
+|name|function
+|router|
+  - gzip support
+  - https TLS encryption (SSL certificate)
+  - http/2
+|ci|
+  - process receives github/gitlab webhooks
+  - updates (pulls) repos on master branch change
+  - compiles changed scripts
+  - operates supervisor
+|supervisor|
+  - resource limiting
+  - process (re)starting
+
+### Resource Control
+
+|resource|limit
+|memory|low+high+max limit
+|disk|device partitioning
+|cpu|fair scheduler
+|network|fair scheduler
+
+ℹ
+There is a current shift from cgroup v1 to cgroup v2[¹](http://man7.org/linux/man-pages/man7/cgroups.7.html)[²](https://www.kernel.org/doc/Documentation/cgroup-v2.txt). cgroup v2 is not ready yet, the current status can be seen at [¹](https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/)(Tejun Heo).
+
+The legacy process was:
+
+```
+sudo mount -t tmpfs cgroup_root /sys/fs/cgroup
+cd /sys/fs/cgroup
+mkdir web_services
+sudo mount -t cgroup -ocpuacct,memory,net_cls none /sys/fs/cgroup/web_services
+sh -c "echo \$$ > /cgroup/lab1/group1/tasks && lynx"
+```
+cgroup v2 allows only one writer. systemd will become the single writer[¹](http://thread.gmane.org/gmane.comp.sysutils.systemd.devel/11381).
+
+So resource control is done via systemd.
+
+
+Done with systemd[¹](https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/):
+
+```
+id
+systemd-cgls
+systemctl
+systemctl show user.slice
+
+systemd-run --user --scope --slice=web node ./cli.js start
+systemd-run --user --scope --slice=web node ./cli.js restart
+```
+
+↑~/.config/systemd/user/web.slice :
+
+```
+[Unit]
+Description=web services
+```
+
+```
+sudo systemctl reload-daemon
+man systemd.resource-control
+```
+
+|resource|test
+|memory|```
+  (systemd-run --user --scope -p MemoryMax=100M -p MemoryAccounting=1 sleep 60)&
+  systemd-cgtop /user.slice/user-1000.slice/user@1000.service
+  cat /sys/fs/cgroup/systemd/user.slice/user-1000.slice/
+
+  systemd-cgls
+  ```
+
+
+## Access
+
+### CLI frontend
+
+- └▪cli ls↵
+- └▪cli start [name]↵
+- └▪cli stop [name]↵
+- └▪cli restart [name]↵
+- └▪cli log [name]↵
+  - ✔ managed from ↑cli.ls for ↑ci.ls
+    - ✔ log for ↑ci.ls viewable
+  - ✔ managed from ↑ci.ls for rest
+    - ✔ ↑ci_state.json already used
+    - ✔ hiding implementation details from ↑cli.ls
+
+### Web frontend
+
+`?token=xxx` required
+
+|API
+|`GET /`|serve web frontend
+|`GET /proc`|all processes from config|`[{name,status,pid,ports}, …]`
+|`GET /proc/[name]/start`|
+|`GET /proc/[name]/stop`|
+|`GET /proc/[name]/restart`|
+|`GET /log[/proc]`|see [adabru-log](./Log)
+
+
+## Development
+
+||
+|Start| ```
+  lsc -wc ./*.ls &
+  . .bashrc
+  ```
+|Stop| ```
+  pkill -e node
+  ```
+|Test|
+  - logging (↑logpipe.ls ↑logserver.ls)
+
+    ```
+    node test_log.js
+    ```

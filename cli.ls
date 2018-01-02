@@ -36,7 +36,7 @@ print_log = (log) ->
   pad = (s) -> "  #s".substr -2
   console.log log.map((line) ->
     d = new Date line.d
-    m = ['' 'Jan' 'Feb' 'Mar' 'Apr' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec']
+    m = ['Jan' 'Feb' 'Mar' 'Apr' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec']
     dt = Date.now! - d.getTime!
     diff = switch
       case dt <                 99 * 1000 then "#{pad Math.round dt                      / 1000}s"
