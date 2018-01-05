@@ -22,10 +22,17 @@ http.createServer (req, res) ->
   _url = url.parse req.url, true
   switch
     case _url.pathname is /\/$/
-      answer 200, "<h1>Dashboard</h1><script src=\"app.js\"></script>"
-    case _url.pathname is /\/app.js$/
+      answer 200, '
+        <div id="app"><h1>Dashboard</h1></div>
+        <script src="dashboard_app.js"></script>
+        <link href="dashboard_app.css" rel="stylesheet">
+      '
+    case _url.pathname is /\/dashboard_app.js$/
       res.writeHead 200, 'content-type': 'application/javascript'
-      fs.createReadStream('./dashboard_front.js').pipe res
+      fs.createReadStream('./dashboard_app.js').pipe res
+    case _url.pathname is /\/dashboard_app.css$/
+      res.writeHead 200, 'content-type': 'text/css'
+      fs.createReadStream('./dashboard_app.css').pipe res
     case _url.query.token isnt token
       answer 403, "falsches token"
     case _url.pathname is /\/proc$/

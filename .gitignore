@@ -1,5 +1,6 @@
 node_modules
 *.js
+*.css
 absh.ls
 
 config.ls

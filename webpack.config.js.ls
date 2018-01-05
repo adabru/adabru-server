@@ -4,6 +4,6 @@ module.exports =
   # module:
   #   loaders: [test: /\.css$/, loader: "style-loader!css-loader"]
   output:
-    filename: './dashboard_fronts.js',
+    filename: './dashboard_app.js',
     library: 'dashboard',
     libraryTarget: 'var'
