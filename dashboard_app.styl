@@ -1,2 +1,45 @@
 body
   background-color: #abc
+  margin: 0
+
+#app
+  padding: 5px
+
+.procs
+  font: 1em sans-serif
+  margin: 0
+  background: #9ab
+  li
+    list-style-type: none
+    padding: 8px
+    span
+      padding: 5px
+      &.running
+        border-radius: 8px 0 0 8px
+        color: #060
+        background: #aca
+      &.not.running
+        border-radius: 8px
+        color: #660
+        background: #cca
+        &:after
+          content: " ⚠"
+      &.stopped
+        border-radius: 8px
+        color: #600
+        background: #caa
+        &:after
+          content: " ☠"
+      &.pid
+        color: #888
+        background: #444
+        &:before
+          content: "PID"
+          font-size: .5em
+          vertical-align: middle
+          padding-right: 2px
+    .ports
+      color: #444
+      background: #888
+      font: 1.2em monospace
+      border-radius: 0 8px 8px 0

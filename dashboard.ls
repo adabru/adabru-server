@@ -23,6 +23,7 @@ http.createServer (req, res) ->
   switch
     case _url.pathname is /\/$/
       answer 200, '
+        <head><meta charset="utf-8"></head>
         <div id="app"><h1>Dashboard</h1></div>
         <script src="dashboard_app.js"></script>
         <link href="dashboard_app.css" rel="stylesheet">
