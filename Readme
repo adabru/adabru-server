@@ -121,7 +121,8 @@ man systemd.resource-control
 
 ### Web frontend
 
-`?token=xxx` required
+- `?token=xxx` required
+- whole server state (apart from codebase) is viewable and editable
 
 |API
 |`GET /`|serve web frontend

@@ -1,3 +1,15 @@
+
+flat-button(fg, bg)
+  button
+    color: fg
+    &:focus
+      outline: none
+    background: linear-gradient(20deg, mix(fg, bg, 30%), bg 30%)
+    &:hover
+      background: linear-gradient(20deg, mix(fg, bg, 60%), bg 30%)
+    &:active
+      background: linear-gradient(45deg, bg, mix(fg, bg, 60%))
+
 body
   background-color: #abc
   margin: 0
@@ -12,32 +24,77 @@ body
   li
     list-style-type: none
     padding: 8px
+    position: relative
+    display: inline-flex
     span
       padding: 5px
-      &.running
+      &.name
         border-radius: 8px 0 0 8px
+    button
+      border: none
+
+    &.running
+      .name
         color: #060
         background: #aca
-      &.not.running
-        border-radius: 8px
+      flat-button #060 #aca
+      button.start
+        display: none
+    &.notrunning
+      .name
         color: #660
         background: #cca
         &:after
           content: " ⚠"
-      &.stopped
-        border-radius: 8px
+      flat-button #660 #cca
+      button.stop, span.pid
+        display: none
+    &.stopped
+      .name
         color: #600
         background: #caa
         &:after
           content: " ☠"
-      &.pid
-        color: #888
-        background: #444
-        &:before
-          content: "PID"
-          font-size: .5em
-          vertical-align: middle
-          padding-right: 2px
+      flat-button #600 #caa
+      button.start, span.pid
+        display: none
+
+    button.stop:before { content: "✗" }
+    button.restart:before { content: "↺" }
+    button.start:before { content: "↗" }
+
+    &:after
+      content: ' '
+      border-radius: 8px
+      position: absolute
+      width: calc(100% - 16px)
+      height: calc(100% - 16px)
+      transition-duration: 1s
+      pointer-events: none
+    &.pending:after
+      pointer-events: all
+      @keyframes stripes
+        0%   { box-shadow: #ccf 0px 0px 10px inset }
+        50%  { box-shadow: #ccf 0px 0px 50px inset }
+        100% { box-shadow: #ccf 0px 0px 10px inset }
+      animation-iteration-count: infinite
+      animation-name: stripes
+      animation-duration: 1s
+    &.success:after
+      transition-duration: 0s
+      background: #0c0
+    &.failure:after
+      transition-duration: 0s
+      background: #c00
+
+    span.pid
+      color: #888
+      background: #444
+      &:before
+        content: "PID"
+        font-size: .5em
+        vertical-align: middle
+        padding-right: 2px
     .ports
       color: #444
       background: #888
