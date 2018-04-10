@@ -113,7 +113,20 @@ class ProcessLog extends React.Component
       if @state.log[line].d > @props.logstate.lastdate then @props.changeLogstate lastdate: @state.log[line].d
   render: ->
     buildItem = ({d,s}, i) ~>
-      e 'pre', key:i, className:"#{if d > @props.logstate.lastdate then 'unread'}", s
+      dt = Date.now! - d
+      diff = switch
+        case dt <                 99 * 1000 then "#{Math.round dt                      / 1000}s"
+        case dt <            99 * 60 * 1000 then "#{Math.round dt                 / 60 / 1000}m"
+        case dt <       20 * 60 * 60 * 1000 then "#{Math.round dt            / 60 / 60 / 1000}h"
+        case dt <   5 * 24 * 60 * 60 * 1000 then "#{Math.round dt       / 24 / 60 / 60 / 1000}d"
+        case dt <  35 * 24 * 60 * 60 * 1000 then "#{Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
+        case dt < 300 * 24 * 60 * 60 * 1000 then "#{Math.round dt  / 30 / 24 / 60 / 60 / 1000}o"
+        case dt <                  Infinity then "#{Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
+      e 'div',
+        key:i,
+        className:"entry #{if d > @props.logstate.lastdate then 'unread'}"
+        e 'span', className: "date #{diff.substr -1}", diff
+        e 'pre', {}, s
     e 'div',
       className: "log",
       onScroll: ~>@updateSeen!,

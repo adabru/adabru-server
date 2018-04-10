@@ -139,14 +139,33 @@ body
   max-width: 200px
   transition-duration: .5s
   overflow: auto
-  background-color: #cce
-  pre
+  display: grid
+  .entry
+    &:nth-child(2n)
+      background: #cce
+    &:nth-child(2n+1)
+      background: #c4c4e0
+    display: inline-flex
     transition-delay: 1s
     transition-duration: 5s
-    margin: 0
-  pre.unread
-    background: #fce
-
+    pre
+      margin: 0
+    &.unread
+      background: #fce
+    .date
+      color: #e49
+      &.s { background: #f99 }
+      &.m { background: #faa }
+      &.h { background: #fbb }
+      &.d { background: #fcc }
+      &.w { background: #fdd }
+      &.o { background: #fee }
+      &.y { background: #fee }
+      user-select: none
+      font-size: .8em
+      letter-spacing: 2px
+      min-width: 40px
+      text-align: center
 
 // expanding
 .procs .proc.expand
