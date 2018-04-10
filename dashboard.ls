@@ -53,8 +53,9 @@ http.createServer (req, res) ->
       if e? then return answer 500, e
       if code isnt 200 then return answer code, res
       answer 200, "#name was restarted"
-    case _url.pathname is /\/log$/
-      proxy logbackendport, "/", "log service request failed"
     case _url.pathname is /\/log\/[^\/]+$/
       proxy logbackendport, /\/log(\/[^\/]+)$/.exec(_url.pathname).1, "log service request failed"
+    # pay attention to /log/log
+    case _url.pathname is /\/log$/
+      proxy logbackendport, "/", "log service request failed"
 .listen dashboardport, '::1', -> console.log "dasboard service running on http://[::1]:#{dashboardport}"
