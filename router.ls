@@ -1,8 +1,9 @@
-#!/usr/bin/env lsc
 
 require! [fs, https, http, net, url, zlib]
 
 {http_redirect, port, routes} = JSON.parse process.argv.2
+
+
 hostname = '::1'
 $ = http_redirect ; http_redirect = {} ; [, http_redirect.from, http_redirect.to] = /(.*)->(.*)/.exec $
 

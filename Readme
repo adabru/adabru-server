@@ -11,6 +11,99 @@
 
 ![design](design.svg)
 
+### Core Services
+
+|name|function
+|router|
+  - gzip support
+  - https TLS encryption (SSL certificate, autoreload)
+  - TODO http/2
+  - http → https redirection
+|ci|
+  - process receives github/gitlab webhooks
+  - updates (pulls) repos on master branch change
+  - compiles changed scripts
+  - operates supervisor
+|dashboard|
+  - web frontend
+  - facade for the other services
+|supervisor|
+  - TODO resource limiting
+  - process (re)starting
+|log|
+  - central logging
+|TODO monitor|
+  - monitor processes
+  - twitch processes
+
+
+### Interfaces
+
+|name|interface
+|router|
+  - first cli argument (`JSON.stringify`)
+  - ```
+    {
+      port: routerport,
+      http_redirect: "7080->#routerport",
+      routes: ['localhost(:[0-9]+)?/admin': dashboardport]
+    }
+    ```
+|ci|
+  - first cli argument is path to config file
+
+  |HTTP
+  |* `/webhook/[hookname]`|requires header 'x-gitlab-token' or 'x-hub-signature'
+  |* `/ls`
+  |* `/start/[proc]`
+  |* `/stop/[proc]`
+  |GET `/config/[proc]`
+  |PUT `/config/[proc]`
+|cli (frontend)|
+  - frontend interface to ci and log (see graphic)
+  - └▪cli ls↵
+  - └▪cli start [name]↵
+  - └▪cli stop [name]↵
+  - └▪cli restart [name]↵
+  - └▪cli log [name]↵
+    - ✔ managed from ↑cli.ls for ↑ci.ls
+      - ✔ log for ↑ci.ls viewable
+    - ✔ managed from ↑ci.ls for rest
+      - ✔ ↑ci_state.json already used
+      - ✔ hiding implementation details from ↑cli.ls
+|dashboard|
+  - replaces login to server (ideally)
+
+  |HTTP
+  |`*`|`?token=xxx` required
+  |`GET /`|serve web frontend
+  |`GET /proc`|all processes from config|`[{name,status,pid,ports}, …]`
+  |`GET /proc/[name]/start`|
+  |`GET /proc/[name]/stop`|
+  |`GET /proc/[name]/restart`|
+  |`GET /proc/[name]/config`|get cli JSON argument|`string` or `object` or … (JSON)
+  |`PUT /proc/[name]/config`|set cli JSON argument|`string` or `object` or … (JSON)
+  |`GET /log[/proc]`|see [adabru-log](./Log)
+
+  - first cli argument (`JSON.stringify`)
+  - ```
+    {
+      dashboardport: dashboardport,
+      ciport: ciport,
+      logbackendport: logbackendport,
+      token: "abc123"
+    }
+    ```
+|logserver|
+  see see [adabru-log](./Log)
+
+### State
+
+- codebase
+- server setup
+- runtime environment (= RAM/cache, network stack, logs, ssl certs)
+- configuration(-file)
+
 ## Serving
 
 - least downtime as possible
@@ -28,22 +121,6 @@ Services are organised in separate node processes communicating via pipes, tcp a
 - single processes are limited by cgroups to ensure most important processes keep running
 - cli and web frontend for monitoring, (re)starting, stopping, switching the processes
 
-
-### Services
-
-|name|function
-|router|
-  - gzip support
-  - https TLS encryption (SSL certificate)
-  - http/2
-|ci|
-  - process receives github/gitlab webhooks
-  - updates (pulls) repos on master branch change
-  - compiles changed scripts
-  - operates supervisor
-|supervisor|
-  - resource limiting
-  - process (re)starting
 
 ### Resource Control
 
@@ -70,7 +147,7 @@ cgroup v2 allows only one writer. systemd will become the single writer[¹](http
 So resource control is done via systemd.
 
 
-Done with systemd[¹](https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/):
+Done with systemd[¹](http://man7.org/linux/man-pages/man5/systemd.resource-control.5.html)[²](https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/):
 
 ```
 id
@@ -104,35 +181,6 @@ man systemd.resource-control
   ```
 
 
-## Access
-
-### CLI frontend
-
-- └▪cli ls↵
-- └▪cli start [name]↵
-- └▪cli stop [name]↵
-- └▪cli restart [name]↵
-- └▪cli log [name]↵
-  - ✔ managed from ↑cli.ls for ↑ci.ls
-    - ✔ log for ↑ci.ls viewable
-  - ✔ managed from ↑ci.ls for rest
-    - ✔ ↑ci_state.json already used
-    - ✔ hiding implementation details from ↑cli.ls
-
-### Web frontend
-
-- `?token=xxx` required
-- whole server state (apart from codebase) is viewable and editable
-
-|API
-|`GET /`|serve web frontend
-|`GET /proc`|all processes from config|`[{name,status,pid,ports}, …]`
-|`GET /proc/[name]/start`|
-|`GET /proc/[name]/stop`|
-|`GET /proc/[name]/restart`|
-|`GET /log[/proc]`|see [adabru-log](./Log)
-
-
 ## Development
 
 ||
@@ -160,6 +208,6 @@ man systemd.resource-control
     node test_log.js
     ```
 |Error Handling|
-  Restart processes and see log at https://[host/base]/admin/
+  Restart processes or see log at https://[host/base]/admin/
 
   If `router`, `log`, `dashboard` or `ci` are affected, use └▪cli log dashboard↵.

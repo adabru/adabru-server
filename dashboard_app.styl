@@ -22,7 +22,6 @@ body
   font: 1em sans-serif
   margin: 0
   padding: 0
-  background: #9ab
   .proc
     margin: 4px
     border: 3px solid #333
@@ -52,6 +51,7 @@ body
   button.restart:before { content: "↺" }
   button.start:before { content: "↗" }
 
+  // flash
   &:after
     content: ' '
     border-radius: 8px
@@ -137,7 +137,7 @@ body
   position: relative // for correct offsetTop values
   max-height: 0
   max-width: 200px
-  transition-duration: .5s
+  transition-duration: .1s
   overflow: auto
   display: grid
   .entry
@@ -146,6 +146,7 @@ body
     &:nth-child(2n+1)
       background: #c4c4e0
     display: inline-flex
+    // unread messages
     transition-delay: 1s
     transition-duration: 5s
     pre

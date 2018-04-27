@@ -19,7 +19,7 @@ help = -> console.log '''
 
 '''
 
-config = require "./config.js"
+config = JSON.parse fs.readFileSync "./config.json"
 supervisor = require "./supervisor.js"
 
 fetch = (service, port, path, callback) ->
@@ -57,38 +57,38 @@ print_process = (p) ->
     case "not running" then "\033[33mnot running\033[39m   #{"    "}"
   console.log s
 
-(res, code) <- fetch "ci", config.ciport, "/ls", _
+(res, code) <- fetch "ci", config.env.ciport, "/ls", _
 m = (regex) -> new RegExp("^#{regex.source}$").test process.argv.2 + if process.argv.3? then " #that" else ''
 if res? then (switch
   |m /ls/
-    (res) <- fetch "ci", config.ciport, "/ls", _
+    (res) <- fetch "ci", config.env.ciport, "/ls", _
     ps = JSON.parse res
     for p in ps
       print_process p
   |m /start( ci)?/
     console.log "ci is already running"
   |m /start .+/
-    fetch "ci", config.ciport, "/start/#{process.argv.3}", console.log
+    fetch "ci", config.env.ciport, "/start/#{process.argv.3}", console.log
   |m /stop( ci)?/
     process.stdout.write "Stopping ci..."
     (pid) <- supervisor.pgrep /.\/ci.js/, _
     <- supervisor.terminate pid, _
     console.log " ✔"
   |m /stop .+/
-    fetch "ci", config.ciport, "/stop/#{process.argv.3}", console.log
+    fetch "ci", config.env.ciport, "/stop/#{process.argv.3}", console.log
   |m /restart( ci)?/
     process.stdout.write "Stopping ci..."
     (pid) <- supervisor.pgrep /.\/ci.js/, _
     <- supervisor.terminate pid, _
     console.log " ✔"
-    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', config.logport}).pid}"
+    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', args:'./config.json', logport:config.env.logport}).pid}"
   |m /restart .+/
-    (res, status) <- fetch "ci", config.ciport, "/stop/#{process.argv.3}", _
+    (res, status) <- fetch "ci", config.env.ciport, "/stop/#{process.argv.3}", _
     console.log res, status
     if status is 200
-      fetch "ci", config.ciport, "/start/#{process.argv.3}", console.log
+      fetch "ci", config.env.ciport, "/start/#{process.argv.3}", console.log
   |m /log .+/
-    (res, status) <- fetch "log", config.logbackendport, "/#{process.argv.3}", _
+    (res, status) <- fetch "log", config.env.logbackendport, "/#{process.argv.3}", _
     if status is 200
       print_log JSON.parse res
     else
@@ -98,7 +98,7 @@ if res? then (switch
 ) else (switch
   |m /start( ci)?/ then fallthrough
   |m /restart( ci)?/
-    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', config.logport}).pid}"
+    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', args:'./config.json', logport:config.env.logport}).pid}"
   |m /ls/ then fallthrough
   |m /start .+/ then fallthrough
   |m /stop( ci)?/ then fallthrough
@@ -106,7 +106,7 @@ if res? then (switch
   |m /restart .+/
     console.error '\033[31mci is not running. Start it with \033[1mcli start [ci]\033[22m.\033[39m'
   |m /log .+/
-    (res, status) <- fetch "log", config.logbackendport, "/#{process.argv.3}", _
+    (res, status) <- fetch "log", config.env.logbackendport, "/#{process.argv.3}", _
     if status is 200
       print_log JSON.parse res
     else

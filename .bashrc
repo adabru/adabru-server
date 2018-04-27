@@ -10,7 +10,7 @@ cli_complete(){
     COMPREPLY=( $(compgen -W "start stop log ls restart" -- $2) )
   fi
   if [[ $COMP_CWORD == 2 ]] ; then
-    procs=$(perl -ne "/^    '(.+?)'/ && print \"\$1\n\"" config.ls)
+    procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" config.json)
     COMPREPLY=( $(compgen -W "$procs ci" -- $2) )
   fi
 }

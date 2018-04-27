@@ -41,15 +41,21 @@ supervisor = new
       .map (tcp_addr) -> parseInt tcp_addr.split(':').1, 16
     )
 
-  @start = ({logname, args, script, cwd, logport}) ->
+  @start = ({logname, args, env, script, cwd, logport}) ->
     cwd ?= '.'
     args ?= ''
+    env ?= {}
     child_log = child_process.spawn 'node', ['./logpipe.js', logname, logport], stdio: ['pipe', 'ignore', 'ignore']
       ..unref!
     _args = switch
       case typeof args is 'string' then args.split ' '
       case Array.isArray args then args
       default [JSON.stringify args]
+    # env variables
+    _args = _args.map (a) -> a.replace /\$\{(.+?)\}/g, (, $1) ->
+      if not env[$1]?
+        console.warn "argument parameter #{$1} is not defined in environment: #{JSON.stringify env}"
+      env[$1] or ''
     _args.unshift script
     child = child_process.spawn "node", _args, {cwd, stdio: ['ignore', child_log.stdin, child_log.stdin]}
       ..unref!

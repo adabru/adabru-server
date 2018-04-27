@@ -1,6 +1,7 @@
-#!/usr/bin/env lsc
 
 require! [livescript,http,path,child_process,fs,stream,crypto]
+
+config_path = process.argv.2
 
 callme = (callback, promise) -> promise.then((d)->callback void, d).catch((e)->callback e, d)
 to_string = (stream, cb) ->
@@ -36,25 +37,27 @@ update_processes = (thresholdtime) ->
         if not pid? then return y!
         console.log "restarting #k"
         <- supervisor.terminate pid, _
-        state.pid[k] = (supervisor.start {logname:k, command:p.entry, p.args, p.cwd, config.logport}).pid
+        state.pid[k] = (supervisor.start {logname:k, command:p.entry, p.args, config.env, p.cwd, logport:config.env.logport}).pid
         saveState!
         y!
   (e) <- callme _, Promise.all restarts
   if e? then console.log e
   if fs.statSync('./ci.ls').mtime.getTime! > thresholdtime
     console.log "restarting"
-    supervisor.start {logname:'ci', command:'sh', args:['-c', "while [ -e /proc/#{process.pid} ] ; do sleep .2; done ; ./ci.ls &"], config.logport}
+    supervisor.start {logname:'ci', command:'sh', args:['-c', "while [ -e /proc/#{process.pid} ] ; do sleep .2; done ; ./ci.ls &"], logport:config.env.logport}
     process.exit!
 
 saveState = ->
   fs.writeFileSync './ci_state.json', JSON.stringify state
 
-config = require './config.js'
+try config = JSON.parse fs.readFileSync config_path
+catch e
+  console.error e
+  process.exit -1
 supervisor = require './supervisor.js'
 try state = JSON.parse fs.readFileSync './ci_state.json'
 state = {pid:{}} <<< state
 state.pid['ci'] = process.pid
-config.processes['ci'] = entry: './ci.js'
 validate_webhook = (req, token, cb) ->
   switch
     case req.headers['x-gitlab-token']?
@@ -97,7 +100,7 @@ http.createServer (req, res) ->
           else fs.stat "/proc/#pid", (e,r) ->
             if e? then fulfill name:k, status:'stopped'
             else supervisor.get_ports pid, (ports) -> fulfill {name:k, status:'running', pid, ports}
-        ).catch((e) -> console.log e ; answer 500, e.stack).then (values) -> answer 200, JSON.stringify values
+        ).catch((e) -> console.log e ; answer 500, e.stack).then (values) -> answer 200, JSON.stringify values ++ {name:'ci', status:'running', process.pid, ports:[config.env.ciport]}
       case req.url is /\/start\//
         name = /[^\/]+$/.exec(req.url).0
         if not (p = config.processes[name])?
@@ -105,7 +108,7 @@ http.createServer (req, res) ->
         console.log "starting #name"
         pid = state.pid[name]
         if pid? then return answer 200, "#name already running"
-        state.pid[name] = supervisor.start {logname:name, p.script, p.args, p.cwd, config.logport}
+        state.pid[name] = supervisor.start {logname:name, p.script, p.args, config.env, p.cwd, logport:config.env.logport}
           .on 'error', (e) -> console.error e.stack
           .pid
         saveState!
@@ -120,6 +123,21 @@ http.createServer (req, res) ->
         saveState!
         <- supervisor.terminate pid, _
         answer 200, "#name stopped"
+      case req.url is /\/config\//
+        name = /[^\/]+$/.exec(req.url).0
+        if name isnt 'ci' and not config.processes[name]?
+          return answer 404, "process #name not found!"
+        if req.method is 'GET'
+          answer 200, JSON.stringify if name is 'ci' then config{env, webhooks} else config.processes[name]
+        else /*PUT*/
+          (body) <- to_string req, _
+          if name is 'ci' then config <<< JSON.parse body
+          else            then config.processes[name] = JSON.parse body
+          e <- fs.writeFile config_path, (JSON.stringify config, ' ', 2), _
+          if e? then answer 500, "could not write config: #{e.stack}"
+          else  then answer 200, "config updated"
+      default
+        answer 404, "not found"
   catch e
     answer 500, e.stack
-.listen config.ciport, '::1', -> console.log "continuous integration server running on http://[::1]:#{config.ciport}"
+.listen config.env.ciport, '::1', -> console.log "continuous integration server running on http://[::1]:#{config.env.ciport}"

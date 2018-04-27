@@ -4,6 +4,8 @@
 
 require! [net]
 
+[, , pipe_name, server_port] = process.argv
+
 # debug output
 console.debug = if process.env.DEBUG then (m)->console.log "\x1b[33m#m\x1b[39m" else ->
 
@@ -56,4 +58,4 @@ pipe = (name, port) ->
       console.debug "written [#chunk]"
   process.stdin.on 'end', heartbeat
 
-pipe process.argv.2, process.argv.3
+pipe pipe_name, server_port

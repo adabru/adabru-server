@@ -1,8 +1,8 @@
 # starts tcp logging server and http json server
-#
-# node server.js <tcpport> <httpport>
 
 require! [net,fs,stream,http,util]
+
+[, , tcp_port, http_port] = process.argv
 
 # debug output
 console.debug = if process.env.DEBUG then (m)->console.log "\x1b[33m#m\x1b[39m" else ->
@@ -149,5 +149,5 @@ process.on 'SIGTERM', ->
 
 # start server
 
-tcp_server.listen process.argv.2, "::1"
-http_server.listen process.argv.3, "::1"
+tcp_server.listen tcp_port, "::1"
+http_server.listen http_port, "::1"

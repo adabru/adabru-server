@@ -3,7 +3,7 @@ node_modules
 *.css
 absh.ls
 
-config.ls
+config.json
 ci_state.json
 log/
 
