@@ -2,7 +2,7 @@ React = require 'react'
 ReactDOM = require 'react-dom'
 e = React.createElement
 
-
+{ JsonObject, JsonArray, validateSchema } = require './jsoneditor'
 
 class Dashboard extends React.Component
   ->
@@ -87,7 +87,6 @@ class ProcessItem extends React.Component
         e 'span', className: 'loginfo', (@props.logstate.size ? 0) - @props.logstate.lastsize
       e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logstate, changeLogstate}
-
 ProcessItem.defaultProps = pid: -1, ports: []
 
 
@@ -135,4 +134,22 @@ class ProcessLog extends React.Component
       if @state.log? then @state.log.map buildItem else e 'span', {}, 'no log yet'
 
 
-ReactDOM.render React.createElement(Dashboard), document.getElementById "app"
+class JsonEditor extends React.Component
+  ->
+    @state = do
+      json: []
+      schema:
+        type: 'array'
+        child:
+          type: 'string'
+    e = validateSchema @state.schema
+    if e isnt 'ok' then console.log e
+  render: ->
+    e JsonArray,
+      json: @state.json
+      schema: @state.schema
+      setValue: (val) ~> @setState json:val
+  loadJson: (json) -> @setState {json}
+
+ReactDOM.render React.createElement(JsonEditor), document.getElementById "app"
+# ReactDOM.render React.createElement(Dashboard), document.getElementById "app"

@@ -181,3 +181,84 @@ body
     border: 3px solid #cce
     max-height: 300px
     max-width: 500px
+
+
+
+
+
+
+// jsoneditor
+
+.json-enum
+  padding: 4px
+  border-radius: 0 0 15px 15px
+
+.json-string
+  overflow: hidden
+  width: 300px
+  height: 300px
+  max-width: 100%
+  min-width: 100%
+  max-height: 250px
+  max-width: 250px
+  padding: 4px
+  resize: none
+  white-space: pre
+  border: none
+  border-radius: 0 0 15px 15px
+  &:focus
+    overflow: auto
+    max-width: calc(100%)
+    max-height: calc(100%)
+  &::placeholder
+    color: #ddd
+
+.json-array
+  list-style: none
+  padding-left: 10px
+  display: flex
+  flex-wrap: wrap
+  li
+    display: flex
+    flex-direction: column
+    padding: 4px
+  button
+    border-radius: 15px 15px 0 0
+    width: 100%
+
+.json-object
+  display: inline-block;
+  max-width: 100%;
+  list-style: none
+  padding: 0
+  display: inline-flex
+  flex-wrap: wrap
+  *
+    max-width: 100%;
+  li
+    margin: 5px
+    max-width: calc(100% - 10px)
+    padding: 0
+    display: flex
+    flex-direction: column
+    align-items: center
+    input
+      min-width: 100%
+      &.unset { color: #aaa }
+      &.required { color: #008800 }
+      &::placeholder { color: #ddd }
+      &.set, &.added { color: #000 }
+      &:placeholder-shown { background: #ffd }
+      &.added { background: rgba(200, 200, 100, .2) }
+      border-radius: 15px 15px 0 0
+      padding: 4px
+      font-size: .9em
+      border: none
+      width: 100%
+      text-align: center
+    & > :nth-child(2)
+      background: rgba(66, 139, 192, .15)
+      &.json-string
+        background: #fff
+      border-radius: 0 0 15px 15px
+      width: 100%

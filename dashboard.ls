@@ -6,11 +6,11 @@ require! [fs,http,url]
 http.createServer (req, res) ->
   answer = (code, message) -> res.writeHead code ; res.end message
   proxy = (port, path, errMsg) ->
-    req = http.request {hostname: "::1", port, path}, (_res) ->
+    _req = http.request {hostname: "::1", port, path, req.method}, (_res) ->
       res.writeHead _res.statusCode
       _res.pipe res
-    req.on 'error', (e) -> answer 500, errMsg
-    req.end!
+    _req.on 'error', (e) -> answer 500, errMsg
+    req.pipe _req
   fetch = (port, path, callback) ->
     req = http.request {hostname: "::1", port, path}, (res) ->
       chunks = []
@@ -43,6 +43,9 @@ http.createServer (req, res) ->
     case _url.pathname is /\/proc\/(.*)\/stop$/
       name = /\/proc\/(.*)\/stop$/.exec(_url.pathname).1
       proxy ciport, "/stop/#name", "ci service request failed"
+    case _url.pathname is /\/proc\/(.*)\/config$/
+      name = /\/proc\/(.*)\/config$/.exec(_url.pathname).1
+      proxy ciport, "/config/#name", "ci service request failed"
     case _url.pathname is /\/proc\/(.*)\/restart$/
       name = /\/proc\/(.*)\/restart$/.exec(_url.pathname).1
       (e, res, code) <- fetch ciport, "/stop/#name", _

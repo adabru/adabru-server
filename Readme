@@ -76,14 +76,14 @@
 
   |HTTP
   |`*`|`?token=xxx` required
-  |`GET /`|serve web frontend
-  |`GET /proc`|all processes from config|`[{name,status,pid,ports}, …]`
-  |`GET /proc/[name]/start`|
-  |`GET /proc/[name]/stop`|
-  |`GET /proc/[name]/restart`|
+  |`* /`|serve web frontend
+  |`* /proc`|all processes from config|`[{name,status,pid,ports}, …]`
+  |`* /proc/[name]/start`|
+  |`* /proc/[name]/stop`|
+  |`* /proc/[name]/restart`|
   |`GET /proc/[name]/config`|get cli JSON argument|`string` or `object` or … (JSON)
   |`PUT /proc/[name]/config`|set cli JSON argument|`string` or `object` or … (JSON)
-  |`GET /log[/proc]`|see [adabru-log](./Log)
+  |`* /log[/proc]`|see [adabru-log](./Log)
 
   - first cli argument (`JSON.stringify`)
   - ```

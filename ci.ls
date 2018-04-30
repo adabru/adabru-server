@@ -128,7 +128,9 @@ http.createServer (req, res) ->
         if name isnt 'ci' and not config.processes[name]?
           return answer 404, "process #name not found!"
         if req.method is 'GET'
-          answer 200, JSON.stringify if name is 'ci' then config{env, webhooks} else config.processes[name]
+          answer 200, JSON.stringify do
+            if name is 'ci' then _config = {} <<< config ; delete _config.processes ; _config
+            else then config.processes[name]
         else /*PUT*/
           (body) <- to_string req, _
           if name is 'ci' then config <<< JSON.parse body
