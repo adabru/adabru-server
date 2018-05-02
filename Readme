@@ -95,7 +95,7 @@
     }
     ```
 |logserver|
-  see see [adabru-log](./Log)
+  see [adabru-log](./Log)
 
 ### State
 
@@ -186,7 +186,7 @@ man systemd.resource-control
 ||
 |Setup| ```
   lsc -wc ./*.ls &
-  webpack -w &
+  webpack --mode=development -w &
   stylus -w &
   . .bashrc
   ```

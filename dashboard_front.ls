@@ -2,7 +2,7 @@ React = require 'react'
 ReactDOM = require 'react-dom'
 e = React.createElement
 
-{ JsonObject, JsonArray, validateSchema } = require './jsoneditor'
+{ json_component } = require './jsoneditor'
 
 class Dashboard extends React.Component
   ->
@@ -77,9 +77,9 @@ class ProcessItem extends React.Component
           @setState expand: not @state.expand
           @props.changeLogstate lastsize: @props.logstate.size ? 0
         e 'span', className: 'name', @props.name
-        e 'button', className: 'restart', onClick: ~> @act 'restart'
-        e 'button', className: 'stop', onClick: ~> @act 'stop'
-        e 'button', className: 'start', onClick: ~> @act 'start'
+        e 'button', className: 'restart', onClick: (e) ~> e.stopPropagation! ; @act 'restart'
+        e 'button', className: 'stop', onClick: (e) ~> e.stopPropagation! ; @act 'stop'
+        e 'button', className: 'start', onClick: (e) ~> e.stopPropagation! ; @act 'start'
         e 'span', className: 'pid', @props.pid
         e 'span',
           className: 'ports'
@@ -87,6 +87,8 @@ class ProcessItem extends React.Component
         e 'span', className: 'loginfo', (@props.logstate.size ? 0) - @props.logstate.lastsize
       e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logstate, changeLogstate}
+      e ProcessConfig,
+        {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand}
 ProcessItem.defaultProps = pid: -1, ports: []
 
 
@@ -99,7 +101,7 @@ class ProcessLog extends React.Component
   componentDidUpdate: (prevProps, prevState) ->
     if @props.expand and (not @state.log? or prevProps.logstate.size isnt @props.logstate.size)
       res <~ fetch @props.url .catch((e) -> Promise.resolve e) .then _
-      if res.status isnt 200 then return callback!
+      if res.status isnt 200 then return
       log <~ res.json!.then _
       @setState {log: log.slice 0, -1}
     if @state.log? and ((@props.expand and not prevProps.expand) or not prevState.log?)
@@ -134,22 +136,20 @@ class ProcessLog extends React.Component
       if @state.log? then @state.log.map buildItem else e 'span', {}, 'no log yet'
 
 
-class JsonEditor extends React.Component
+class ProcessConfig extends React.Component
   ->
     @state = do
-      json: []
-      schema:
-        type: 'array'
-        child:
-          type: 'string'
-    e = validateSchema @state.schema
-    if e isnt 'ok' then console.log e
+      json: null
+  componentDidUpdate: (prevProps) ->
+    if @props.expand and not prevProps.expand
+      res <~ fetch @props.url .catch((e) -> Promise.resolve e) .then _
+      if res.status isnt 200 then return
+      json <~ res.json!.then _
+      @setState {json}
   render: ->
-    e JsonArray,
-      json: @state.json
-      schema: @state.schema
-      setValue: (val) ~> @setState json:val
-  loadJson: (json) -> @setState {json}
+    e 'div', className:'config',
+      e json_component(@state.json),
+        json: @state.json
+        setValue: (val) ~> @setState json:val
 
-ReactDOM.render React.createElement(JsonEditor), document.getElementById "app"
-# ReactDOM.render React.createElement(Dashboard), document.getElementById "app"
+ReactDOM.render React.createElement(Dashboard), document.getElementById "app"

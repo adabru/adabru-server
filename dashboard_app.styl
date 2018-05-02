@@ -11,7 +11,7 @@ flat-button(fg, bg)
       background: linear-gradient(45deg, bg, mix(fg, bg, 60%))
 
 body
-  background-color: #abc
+  background-color: #cbc
   margin: 0
 
 #app
@@ -135,9 +135,6 @@ body
 // log
 .proc .log
   position: relative // for correct offsetTop values
-  max-height: 0
-  max-width: 200px
-  transition-duration: .1s
   overflow: auto
   display: grid
   .entry
@@ -168,19 +165,29 @@ body
       min-width: 40px
       text-align: center
 
+// config
+.proc .config
+  overflow: hidden
+
 // expanding
-.procs .proc.expand
-  border-color: #d66
-  .header
-    :first-child
-      border-radius: 8px 0 0 0
-    :last-child
-      border-radius: 0 8px 0 0
-  .log
-    border-radius: 0 0 8px 8px
-    border: 3px solid #cce
-    max-height: 300px
-    max-width: 500px
+.procs .proc
+  & .log, .config
+    max-height: 0
+    max-width: 200px
+    transition-duration: .1s
+  &.expand
+    border-color: #d66
+    .header
+      :first-child { border-radius: 8px 0 0 0 }
+      :last-child { border-radius: 0 8px 0 0 }
+    .log
+      border: 3px solid #cce
+      max-height: 300px
+      max-width: 500px
+    .config
+      max-height: none
+      max-width: 500px
+    :last-child { border-radius: 0 0 8px 8px }
 
 
 
@@ -189,9 +196,17 @@ body
 
 // jsoneditor
 
-.json-enum
-  padding: 4px
-  border-radius: 0 0 15px 15px
+.json-stem
+  display: flex
+  & > button
+    background: #c6f3
+    &:hover { background: #c6f6 }
+    font-size: .5em
+    height: 3em
+    &:nth-child(1) { border-radius: 0 0 0 15px }
+    // 1px for shadow issue
+    &:nth-child(2) { border-radius: 0 0 0 1px }
+    &:nth-child(3) { border-radius: 0 0 15px 0 }
 
 .json-string
   overflow: hidden
@@ -214,29 +229,44 @@ body
     color: #ddd
 
 .json-array
-  list-style: none
-  padding-left: 10px
+  background: #8854
+  padding: 8px
+  box-sizing: border-box
   display: flex
   flex-wrap: wrap
-  li
+  list-style: none
+  > li
     display: flex
     flex-direction: column
-    padding: 4px
-  button
-    border-radius: 15px 15px 0 0
-    width: 100%
+    margin: 1px 1px
+    & > button
+      border-radius: 15px 15px 0 0
+      border-style: groove
+      border-width: 1px
+      width: 100%
+      height: 1.5em
+      background: #c6f6
+      &:hover { background: #f386 }
+    & > button:last-child
+      background: #c6f2
+      &:hover { background: #afd6 }
+    & > :nth-child(2)
+      border-radius: 0 0 15px 15px
+      width: 100%
+
 
 .json-object
-  display: inline-block;
-  max-width: 100%;
-  list-style: none
-  padding: 0
+  background: #8854
+  padding: 8px
+  box-sizing: border-box
   display: inline-flex
   flex-wrap: wrap
-  *
+  max-width: 100%
+  list-style: none
+  > *
     max-width: 100%;
-  li
-    margin: 5px
+  > li
+    margin: 3px 5px
     max-width: calc(100% - 10px)
     padding: 0
     display: flex
@@ -244,12 +274,9 @@ body
     align-items: center
     input
       min-width: 100%
-      &.unset { color: #aaa }
-      &.required { color: #008800 }
-      &::placeholder { color: #ddd }
-      &.set, &.added { color: #000 }
-      &:placeholder-shown { background: #ffd }
-      &.added { background: rgba(200, 200, 100, .2) }
+      background: #c6f6
+      &:last-child { background: #c6f4 }
+      &:last-child:hover { background: #c6f6 }
       border-radius: 15px 15px 0 0
       padding: 4px
       font-size: .9em
@@ -257,8 +284,5 @@ body
       width: 100%
       text-align: center
     & > :nth-child(2)
-      background: rgba(66, 139, 192, .15)
-      &.json-string
-        background: #fff
       border-radius: 0 0 15px 15px
       width: 100%
