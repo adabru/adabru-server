@@ -9,7 +9,7 @@
 
 ## System Overview
 
-![design](design.svg)
+![system design](system_design.svg)
 
 ### Core Services
 
@@ -26,7 +26,7 @@
   - operates supervisor
 |dashboard|
   - web frontend
-  - facade for the other services
+  - backend is facade for the other services
 |supervisor|
   - TODO resource limiting
   - process (re)starting
@@ -97,12 +97,26 @@
 |logserver|
   see [adabru-log](./Log)
 
+### Error Handling
+
+Restart processes or see log at https://[host/base]/admin/ or with └▪cli↵.
+
+If `router`, `log`, `dashboard` or `ci` are affected, use └▪cli↵.
+
+If services have unexpected behaviour, use └▪curl↵
+
+Force stop with └▪kill -9 [pid]↵, 
+
 ### State
 
 - codebase
 - server setup
 - runtime environment (= RAM/cache, network stack, logs, ssl certs)
 - configuration(-file)
+
+## Dashboard
+
+![dashboard mockup](dashboard_mockup.svg)
 
 ## Serving
 
@@ -207,7 +221,3 @@ man systemd.resource-control
     ```
     node test_log.js
     ```
-|Error Handling|
-  Restart processes or see log at https://[host/base]/admin/
-
-  If `router`, `log`, `dashboard` or `ci` are affected, use └▪cli log dashboard↵.

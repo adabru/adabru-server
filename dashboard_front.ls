@@ -67,12 +67,12 @@ class ProcessItem extends React.Component
     res <~ fetch "proc/#{@props.name}/#action?token=#{@props.token}" .catch((e) -> Promise.resolve e) .then _
     if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
     @props.refresh ~> @setState pending: false
-    setTimeout (~> @setState flash: null), 100
   render: ->
     e 'li',
       className: "proc #{@props.status.replace ' ', ''}#{if @state.pending then ' pending' else ''}#{if @state.expand then ' expand' else ''}",
       e 'div',
         className: "header #{@state.flash ? ''}",
+        onAnimationEnd: ~> @setState flash: null
         onClick: ~>
           @setState expand: not @state.expand
           @props.changeLogstate lastsize: @props.logstate.size ? 0

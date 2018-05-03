@@ -10,6 +10,26 @@ flat-button(fg, bg)
     &:active
       background: linear-gradient(45deg, bg, mix(fg, bg, 60%))
 
+pending(col)
+  @keyframes k
+    0%   { box-shadow: col 0px 0px 10px inset }
+    50%  { box-shadow: col 0px 0px 50px inset }
+    100% { box-shadow: col 0px 0px 10px inset }
+  animation-iteration-count: infinite
+  animation-name: k
+  animation-duration: 1s
+
+pulse(col)
+  @keyframes k
+    0%   { background: rgba(col, .0) }
+    10%  { background: rgba(col, .8) }
+    15%  { background: rgba(col, .3) }
+    20%  { background: rgba(col, .8) }
+    50%  { background: rgba(col, .4) }
+    100% { background: rgba(col, .0) }
+  animation-iteration-count: 1
+  animation-name: k
+  animation-duration: 1s
 body
   background-color: #cbc
   margin: 0
@@ -63,19 +83,12 @@ body
     z-index: 2
   &.pending:after
     pointer-events: all
-    @keyframes stripes
-      0%   { box-shadow: #ccf 0px 0px 10px inset }
-      50%  { box-shadow: #ccf 0px 0px 50px inset }
-      100% { box-shadow: #ccf 0px 0px 10px inset }
-    animation-iteration-count: infinite
-    animation-name: stripes
-    animation-duration: 1s
+    pending #ccf
   &.success:after
-    transition-duration: 0s
-    background: #0c0
+    pulse #0c0
   &.failure:after
     transition-duration: 0s
-    background: #c00
+    background: #c00a
 
   span.pid
     color: #888
