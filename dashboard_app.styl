@@ -30,46 +30,58 @@ pulse(col)
   animation-iteration-count: 1
   animation-name: k
   animation-duration: 1s
-body
-  background-color: #cbc
-  margin: 0
 
-#app
-  padding: 5px
+
+body
+  background-color: #fff
+  margin: 0
 
 // process listing
 .procs
-  font: 1em sans-serif
-  margin: 0
-  padding: 0
-  .proc
-    margin: 4px
-    border: 3px solid #333
-    border-radius: 12px
-    display: inline-flex
-    flex-direction: column
-    &:hover
-      border-color: #a55
+  table-layout: fixed
+  text-align: center
+  border-collapse: collapse
+  width: 100%
+  // .proc
+  //   margin: 10px
+  //   &:hover
+  //     border-color: #a55
 
 // process headerline
-.proc .header
-  list-style-type: none
-  position: relative
-  display: inline-flex
-  flat-button-b #006 #aac
-  span
+.proc
+  .status, .name, .start, .stop, .restart
+    font: 1em sans-serif
     padding: 5px
-  :first-child
-    border-radius: 8px 0 0 8px
-  :last-child
-    flex-grow: 1
-    border-radius: 0 8px 8px 0
   button
+    cursor: pointer
+    padding: 0
     border: none
-
-  button.stop:before { content: "✗" }
-  button.restart:before { content: "↺" }
-  button.start:before { content: "↗" }
+    background: #0000
+  .name { width: 5em }
+  .status, .start, .stop { width: 1em }
+  .restart { width: 1.8em }
+  .start button:hover { text-shadow: 2px 2px 2px #0f0 }
+  .restart button:hover { text-shadow: 2px 2px 2px #ff0 }
+  .stop button:hover { text-shadow: 2px 2px 2px #f00 }
+  .pid
+    width: 4em
+    font: 1em monospace
+    position: relative
+    &:hover .ports { visibility: visible }
+    .ports
+      visibility: hidden
+      display: flex
+      flex-direction: column
+      position: absolute
+      color: #000
+      background: #fff
+      font: 1.5em monospace
+      span { padding: 5px 10px }
+      z-index: 1
+    // display: flex
+    // align-items: center
+    // .port
+    //   padding: 0 2px
 
   // flash
   &:after
@@ -83,6 +95,7 @@ body
     z-index: 2
   &.pending:after
     pointer-events: all
+    cursor: wait
     pending #ccf
   &.success:after
     pulse #0c0
@@ -90,79 +103,31 @@ body
     transition-duration: 0s
     background: #c00a
 
-  span.pid
-    color: #888
-    background: #444
-    &:before
-      content: "PID"
-      font-size: .5em
-      vertical-align: middle
-      padding-right: 2px
-  .ports
-    color: #444
-    background: #888
-    font: .9em monospace
-    display: flex
-    align-items: center
-    .port
-      padding: 0 2px
-  span.loginfo
-    color: #888
-    background: #444
-    font-size: .6em
-    &:before
-      position: relative
-      top: 5px
-      content: "ℹ "
 
 // process status
-.proc.running
-  .header
-    .name
-      color: #060
-      background: #aca
-    flat-button #060 #aca
-    button.start
-      display: none
-.proc.notrunning
-  .header
-    .name
-      color: #660
-      background: #cca
-      &:after
-        content: " ⚠"
-    flat-button #660 #cca
-    button.stop, span.pid
-      display: none
-.proc.stopped
-  .header
-    .name
-      color: #600
-      background: #caa
-      &:after
-        content: " ☠"
-    flat-button #600 #caa
-    button.start, span.pid
-      display: none
+.proc
+  &.running
+    background: #cfc
+    color: #080
+    .start button { visibility: hidden }
+  &.notrunning
+    background: #ffc
+    color: #880
+    .stop button, .restart button { visibility: hidden }
+  &.stopped
+    background: #caa
+    .name { color: #600 }
+    .start button { visibility: hidden }
 
 // log
 .proc .log
-  position: relative // for correct offsetTop values
   overflow: auto
   display: grid
   .entry
-    &:nth-child(2n)
-      background: #cce
-    &:nth-child(2n+1)
-      background: #c4c4e0
+    &:nth-child(2n) { background: #cce }
+    &:nth-child(2n+1) { background: #c4c4e0 }
     display: inline-flex
-    // unread messages
-    transition-delay: 1s
-    transition-duration: 5s
-    pre
-      margin: 0
-    &.unread
-      background: #fce
+    pre { margin: 0 }
     .date
       color: #e49
       &.s { background: #f99 }
@@ -185,24 +150,14 @@ body
 // expanding
 .procs .proc
   & .log, .config
-    max-height: 0
-    max-width: 200px
+    max-height: 3em
     transition-duration: .1s
   &.expand
-    border-color: #d66
-    .header
-      :first-child { border-radius: 8px 0 0 0 }
-      :last-child { border-radius: 0 8px 0 0 }
     .log
       border: 3px solid #cce
       max-height: 300px
-      max-width: 500px
     .config
       max-height: none
-      max-width: 500px
-    :last-child { border-radius: 0 0 8px 8px }
-
-
 
 
 
