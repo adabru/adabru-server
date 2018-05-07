@@ -91,7 +91,7 @@ class ProcessItem extends React.Component
       e 'div', className: 'pid',
         e 'span', {}, @props.pid
         e 'div', className: 'ports', @props.ports.map (port, i) -> e 'span', key:i, className:'port', port
-      e ProcessLog,
+      e 'div', className: 'logwrapOuter', e 'div', className: 'logwrapInner', e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name}
       e ProcessConfig,
         {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand}
@@ -102,21 +102,18 @@ ProcessItem.defaultProps = pid: -1, ports: []
 class ProcessLog extends React.PureComponent
   ->
     @state = do
-      scrollend: true
       log: []
       logsize: 0
-    @scrollpane = null
   componentDidMount: ->
-    @scrollpane.scrollTop = @scrollpane.scrollHeight
     if (localStorage.getItem "log_#{@props.name}")?
       @setState JSON.parse(that), @refreshLog
     else
       @refreshLog!
-    @updateInterval = setInterval (~>@forceUpdate!), 5000
+    # refresh elapsed time display
+    @updateInterval = setInterval (~>@forceUpdate!), 1000
   componentDidUpdate: (prevProps, prevState) ->
     @refreshLog!
     if @state.logsize isnt prevState.logsize
-      if @state.scrollend then @scrollpane.scrollTop = @scrollpane.scrollHeight
       localStorage.setItem "log_#{@props.name}", JSON.stringify @state{log,logsize}
   refreshLog: ->
     if @state.logsize is @props.logsize then return
@@ -142,11 +139,10 @@ class ProcessLog extends React.PureComponent
         className:"entry"
         e 'span', className: "date #{diff.substr -1}", diff
         e 'pre', {}, s
-    e 'div',
+    if @state.log.length > 0 then e 'div',
       className: "log",
-      onScroll: ~> @setState scrollend: @scrollpane.scrollTop is @scrollpane.scrollHeight, #@scrollToBottom,
-      ref: (dom) ~> @scrollpane = dom #@setScrollPane
-      if @state.log.length > 0 then @state.log.map buildItem else buildItem {d:Date.now!, s:'no log yet'}
+      @state.log.slice(-30).map buildItem
+    else e 'span', {}, 'no log yet'
 
 
 class ProcessConfig extends React.Component
