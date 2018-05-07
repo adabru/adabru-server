@@ -52,8 +52,7 @@ class Dashboard extends React.Component
           style:
             color: {'no':'#aa0000', 'pending':'#aaaa00'}[@state.approved]
     else
-      e 'table',
-        className: 'procs'
+      e 'div', className: 'procs', e 'table', {},
         e 'tbody', {}, @state.procs.map (proc, i) ~>
           e ProcessItem, {key:proc.name} <<< @state{token} <<< @{heartbeat} <<< proc
 
@@ -72,29 +71,28 @@ class ProcessItem extends React.Component
     if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
     @props.heartbeat ~> @setState pending: false
   shouldComponentUpdate: (nextProps, nextState) ->
-    console.log 'check procitem'
-    Object.keys(@props).some (k) ~> k isnt 'ports' and @props[k] isnt nextProps[k]
-    or @props['ports'].length isnt nextProps['ports'].length
-    or @props['ports'].some (p) ~> not p in nextProps['ports']
-    or Object.keys(@state).some (k) ~> @state[k] isnt nextState[k]
+    (Object.keys(@props).some (k) ~> k isnt 'ports' and @props[k] isnt nextProps[k])
+      or (@props['ports'].length isnt nextProps['ports'].length)
+      or (@props['ports'].some (p) ~> not p in nextProps['ports'])
+      or (Object.keys(@state).some (k) ~> @state[k] isnt nextState[k])
   render: ->
-    console.log 'proc render'
     e 'tr',
+      onClick: ({target}) ~> if target.tagName is 'TD' then @setState expand: not @state.expand
       className: "proc #{@props.status.replace ' ', ''} #{@state.pending and 'pending' or ''} #{@state.expand and 'expand' or ''} #{@state.flash ? ''}",
       onAnimationEnd: ~> @setState flash: null
-      onClick: ~>
-        @setState expand: not @state.expand
       e 'td', className: 'status', {'running':'', 'not running':'⚠', 'stopped':'☠'}[@props.status]
-      e 'td', className: 'name', @props.name
+      e 'td',
+        className: 'name',
+        @props.name
       e 'td', className: 'restart', e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'restart'), '💣🏃'
       e 'td', className: 'stop',    e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'stop'   ), '💣'
       e 'td', className: 'start',   e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'start'  ), '🏃'
       e 'td', className: 'pid',
         e 'span', {}, @props.pid
         e 'div', className: 'ports', @props.ports.map (port, i) -> e 'span', key:i, className:'port', port
-      e 'td', {}, e ProcessLog,
+      e 'td', className: 'td-log', e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name}
-      e 'td', {}, e ProcessConfig,
+      e 'td', className: 'td-config', e ProcessConfig,
         {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand}
 ProcessItem.defaultProps = pid: -1, ports: []
 
@@ -113,13 +111,13 @@ class ProcessLog extends React.PureComponent
       @setState JSON.parse(that), @refreshLog
     else
       @refreshLog!
+    @updateInterval = setInterval (~>@forceUpdate!), 5000
   componentDidUpdate: (prevProps, prevState) ->
     @refreshLog!
     if @state.logsize isnt prevState.logsize
       if @state.scrollend then @scrollpane.scrollTop = @scrollpane.scrollHeight
       localStorage.setItem "log_#{@props.name}", JSON.stringify @state{log,logsize}
   refreshLog: ->
-    console.log 'log render'
     if @state.logsize is @props.logsize then return
     # prevent further updates
     @setState logsize: @props.logsize
@@ -129,44 +127,25 @@ class ProcessLog extends React.PureComponent
     @setState log:log.slice 0, -1
   render: ->
     buildItem = ({d,s}, i) ~>
+      dt = Date.now! - d
+      diff = switch
+        case dt <                 99 * 1000 then "#{Math.round dt                      / 1000}s"
+        case dt <            99 * 60 * 1000 then "#{Math.round dt                 / 60 / 1000}m"
+        case dt <       20 * 60 * 60 * 1000 then "#{Math.round dt            / 60 / 60 / 1000}h"
+        case dt <   5 * 24 * 60 * 60 * 1000 then "#{Math.round dt       / 24 / 60 / 60 / 1000}d"
+        case dt <  35 * 24 * 60 * 60 * 1000 then "#{Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
+        case dt < 300 * 24 * 60 * 60 * 1000 then "#{Math.round dt  / 30 / 24 / 60 / 60 / 1000}o"
+        case dt <                  Infinity then "#{Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
       e 'div',
         key:i,
         className:"entry"
-        e ElapsedTime, {d}
+        e 'span', className: "date #{diff.substr -1}", diff
         e 'pre', {}, s
     e 'div',
       className: "log",
-      onScroll: ~> @setState scrollend: @scrollpane.scrollTop is @scrollpane.scrollHeight,
-      ref: (dom) ~> @scrollpane = dom
+      onScroll: ~> @setState scrollend: @scrollpane.scrollTop is @scrollpane.scrollHeight, #@scrollToBottom,
+      ref: (dom) ~> @scrollpane = dom #@setScrollPane
       if @state.log.length > 0 then @state.log.map buildItem else buildItem {d:Date.now!, s:'no log yet'}
-# class used for optimized performance in react dev mode
-class ElapsedTime extends React.PureComponent
-  (props) ->
-    super props
-    @state = diffTime: @diffTime!
-  # componentDidMount: ->
-  #   console.log 'zahl'
-    # @timer = setTimeout ~> @forceUpdate!
-  # componentDidMount: -> @timer = setInterval (~>@setState systemtime:Date.now!), 2000
-  # componentDidMount: -> @timer = setInterval (~>@forceUpdate!), 5000
-  componentDidMount: -> @timer = setInterval (~>@setState diffTime:@diffTime!), 5000
-  componentWillUnmount: ->
-    # clearTimeout @timer
-    clearInterval @timer
-  render: ->
-    console.log 'date'
-    # dt = @state.systemtime - @props.d
-    e 'span', className: "date #{@state.diffTime.substr -1}", @state.diffTime
-  diffTime: ->
-    dt = Date.now! - @props.d
-    diff = switch
-      case dt <                 99 * 1000 then "#{Math.round dt                      / 1000}s"
-      case dt <            99 * 60 * 1000 then "#{Math.round dt                 / 60 / 1000}m"
-      case dt <       20 * 60 * 60 * 1000 then "#{Math.round dt            / 60 / 60 / 1000}h"
-      case dt <   5 * 24 * 60 * 60 * 1000 then "#{Math.round dt       / 24 / 60 / 60 / 1000}d"
-      case dt <  35 * 24 * 60 * 60 * 1000 then "#{Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
-      case dt < 300 * 24 * 60 * 60 * 1000 then "#{Math.round dt  / 30 / 24 / 60 / 60 / 1000}o"
-      case dt <                  Infinity then "#{Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
 
 
 class ProcessConfig extends React.Component

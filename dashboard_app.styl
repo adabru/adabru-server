@@ -11,16 +11,18 @@ flat-button(fg, bg)
       background: linear-gradient(45deg, bg, mix(fg, bg, 60%))
 
 pending(col)
-  @keyframes k
+  $name = unquote('pending-' + substr(s("%s", col),1,3))
+  @keyframes {$name}
     0%   { box-shadow: col 0px 0px 10px inset }
     50%  { box-shadow: col 0px 0px 50px inset }
     100% { box-shadow: col 0px 0px 10px inset }
   animation-iteration-count: infinite
-  animation-name: k
+  animation-name: $name
   animation-duration: 1s
 
 pulse(col)
-  @keyframes k
+  $name = unquote('pulse-' + substr(s("%s", col),1,3))
+  @keyframes {$name}
     0%   { background: rgba(col, .0) }
     10%  { background: rgba(col, .8) }
     15%  { background: rgba(col, .3) }
@@ -28,7 +30,7 @@ pulse(col)
     50%  { background: rgba(col, .4) }
     100% { background: rgba(col, .0) }
   animation-iteration-count: 1
-  animation-name: k
+  animation-name: $name
   animation-duration: 1s
 
 
@@ -38,14 +40,17 @@ body
 
 // process listing
 .procs
+  overflow-y: scroll
+  height: 100%
+.procs table
   table-layout: fixed
+  position: relative
   text-align: center
   border-collapse: collapse
   width: 100%
-  // .proc
-  //   margin: 10px
-  //   &:hover
-  //     border-color: #a55
+  overflow: scroll
+  .proc
+    border-bottom: 3px solid #888
 
 // process headerline
 .proc
@@ -58,7 +63,7 @@ body
     border: none
     background: #0000
   .name { width: 5em }
-  .status, .start, .stop { width: 1em }
+  .status, .start, .stop { width: .5em }
   .restart { width: 1.8em }
   .start button:hover { text-shadow: 2px 2px 2px #0f0 }
   .restart button:hover { text-shadow: 2px 2px 2px #ff0 }
@@ -70,29 +75,24 @@ body
     &:hover .ports { visibility: visible }
     .ports
       visibility: hidden
-      display: flex
-      flex-direction: column
       position: absolute
       color: #000
       background: #fff
       font: 1.5em monospace
       span { padding: 5px 10px }
       z-index: 1
-    // display: flex
-    // align-items: center
-    // .port
-    //   padding: 0 2px
+      top: 0px
+  .td-log, .td-config { width: 35% }
 
   // flash
   &:after
     content: ' '
-    border-radius: 8px
     position: absolute
     width: 100%
-    height: 100%
     transition-duration: 1s
     pointer-events: none
     z-index: 2
+    left: 0
   &.pending:after
     pointer-events: all
     cursor: wait
@@ -143,21 +143,20 @@ body
       min-width: 40px
       text-align: center
 
-// config
-.proc .config
-  overflow: hidden
-
 // expanding
 .procs .proc
-  & .log, .config
-    max-height: 3em
+  .log, .config, &:after
+    overflow: hidden
+    height: 50px
+    min-height: 50px;
     transition-duration: .1s
   &.expand
-    .log
-      border: 3px solid #cce
-      max-height: 300px
-    .config
-      max-height: none
+    .log, .config, &:after
+      overflow: auto
+      height: auto
+      // height: 300px
+      min-height: 300px
+
 
 
 
@@ -168,6 +167,7 @@ body
   display: flex
   & > button
     background: #c6f3
+    padding: 0 5px
     &:hover { background: #c6f6 }
     font-size: .5em
     height: 3em
@@ -211,6 +211,7 @@ body
       border-radius: 15px 15px 0 0
       border-style: groove
       border-width: 1px
+      padding: 8px
       width: 100%
       height: 1.5em
       background: #c6f6
