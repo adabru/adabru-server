@@ -33,7 +33,7 @@ class JsonString extends React.Component
   resize: ->
     # workaround issue when not visible
     dummy = @ta.cloneNode!
-    dummy.style = "width:0; height:0; resize:none; overflow:hidden; white-space:pre; padding:4px 8px; min-width:0"
+    dummy.style = "width:0; height:0; resize:none; overflow:hidden; white-space:pre; padding:4px 4px; min-width:0"
     document.body.append dummy
     @ta.style <<< { height:dummy.scrollHeight, width:dummy.scrollWidth }
     document.body.removeChild(dummy)

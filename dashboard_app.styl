@@ -10,28 +10,47 @@ flat-button(fg, bg)
     &:active
       background: linear-gradient(45deg, bg, mix(fg, bg, 60%))
 
-pending(col)
-  $name = unquote('pending-' + substr(s("%s", col),1,3))
-  @keyframes {$name}
-    0%   { box-shadow: col 0px 0px 10px inset }
-    50%  { box-shadow: col 0px 0px 50px inset }
-    100% { box-shadow: col 0px 0px 10px inset }
-  animation-iteration-count: infinite
-  animation-name: $name
-  animation-duration: 1s
-
-pulse(col)
-  $name = unquote('pulse-' + substr(s("%s", col),1,3))
-  @keyframes {$name}
-    0%   { background: rgba(col, .0) }
-    10%  { background: rgba(col, .8) }
-    15%  { background: rgba(col, .3) }
-    20%  { background: rgba(col, .8) }
-    50%  { background: rgba(col, .4) }
-    100% { background: rgba(col, .0) }
-  animation-iteration-count: 1
-  animation-name: $name
-  animation-duration: 1s
+feedback()
+  pending(col)
+    $name = unquote('pending-' + substr(s("%s", col),1,3))
+    @keyframes {$name}
+      0%   { box-shadow: col 0px 0px 10px inset }
+      50%  { box-shadow: col 0px 0px 50px inset }
+      100% { box-shadow: col 0px 0px 10px inset }
+    animation-iteration-count: infinite
+    animation-name: $name
+    animation-duration: 1s
+  pulse(col)
+    $name = unquote('pulse-' + substr(s("%s", col),1,3))
+    @keyframes {$name}
+      0%   { background: rgba(col, .0) }
+      10%  { background: rgba(col, .8) }
+      15%  { background: rgba(col, .3) }
+      20%  { background: rgba(col, .8) }
+      50%  { background: rgba(col, .4) }
+      100% { background: rgba(col, .0) }
+    animation-iteration-count: 1
+    animation-name: $name
+    animation-duration: 1s
+  // flash
+  &:after
+    top: 0
+    left: 0
+    content: ' '
+    position: absolute
+    width: 100%
+    height: 100%
+    transition-duration: 1s
+    pointer-events: none
+    z-index: 1
+  &.pending:after
+    pointer-events: all
+    cursor: wait
+    pending #ccf
+  &.success:after
+    pulse #0c0
+  &.failure:after
+    pulse #c00
 
 
 body
@@ -53,6 +72,7 @@ body
 .proc
   font: 1em sans-serif
   position: relative
+  feedback()
   .status { width: 2em }
   .name { width: 5em }
   .start, .stop, .restart
@@ -79,35 +99,18 @@ body
       span { padding: 5px }
       z-index: 1
   .logwrapOuter
+    background: #cce
     width: 30%
     .logwrapInner
       height: 100%
       overflow: visible
       position: relative
       .log
+        width: 100%
         bottom: 0
         position: absolute
   .config
     width: 30%
-
-  // flash
-  &:after
-    content: ' '
-    position: absolute
-    width: 100%
-    height: 100%
-    transition-duration: 1s
-    pointer-events: none
-    z-index: 1
-  &.pending:after
-    pointer-events: all
-    cursor: wait
-    pending #ccf
-  &.success:after
-    pulse #0c0
-  &.failure:after
-    transition-duration: 0s
-    background: #c00a
 
 
 // process status
@@ -147,6 +150,30 @@ body
       letter-spacing: 2px
       min-width: 40px
       text-align: center
+
+// config
+.proc .config
+  align-self: baseline
+  position: relative
+  feedback()
+  & > button
+    width: calc(100% - 4px)
+    height: 46px
+    margin: 2px
+    font-size: 2em
+    box-sizing: border-box
+    background: #c6f8
+    border: 5px groove #fcf
+    color: #fcf
+    &.locked
+      &:before { content: '🔒'; color: #fcf }
+      &:after { content: '🔓'; color: #c6f8 }
+    &.unlocked
+      &:before { content: '🔒'; color: #c6f8 }
+      &:after { content: '🔓'; color: #fcf }
+.proc.expand .config
+  & > button
+    width: calc(50% - 4px);
 
 // expanding
 .procs .proc
@@ -188,7 +215,7 @@ body
   min-width: 100%
   max-height: 250px
   max-width: 250px
-  padding: 4px
+  padding: 2px
   resize: none
   white-space: pre
   border: none
@@ -202,7 +229,7 @@ body
 
 .json-array
   background: #8854
-  padding: 8px
+  padding: 2px
   box-sizing: border-box
   display: flex
   flex-wrap: wrap
@@ -230,7 +257,8 @@ body
 
 .json-object
   background: #8854
-  padding: 8px
+  margin: 0
+  padding: 2px
   box-sizing: border-box
   display: inline-flex
   flex-wrap: wrap
@@ -239,7 +267,7 @@ body
   > *
     max-width: 100%;
   > li
-    margin: 3px 5px
+    margin: 3px
     max-width: calc(100% - 10px)
     padding: 0
     display: flex
@@ -251,7 +279,7 @@ body
       &:last-child { background: #c6f4 }
       &:last-child:hover { background: #c6f6 }
       border-radius: 15px 15px 0 0
-      padding: 4px
+      padding: 2px
       font-size: .9em
       border: none
       width: 100%

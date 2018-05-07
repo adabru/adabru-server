@@ -77,24 +77,22 @@ class ProcessItem extends React.Component
       or (Object.keys(@state).some (k) ~> @state[k] isnt nextState[k])
   render: ->
     e 'div',
-      onClick: ({currentTarget, target}) ~>
-        if currentTarget in [target, target.parentElement] then @setState expand: not @state.expand
       className: "proc #{@props.status.replace ' ', ''} #{@state.pending and 'pending' or ''} #{@state.expand and 'expand' or ''} #{@state.flash ? ''}",
       onAnimationEnd: ~> @setState flash: null
       e 'span', className: 'status', {'running':'', 'not running':'⚠', 'stopped':'☠'}[@props.status]
       e 'span',
         className: 'name',
         @props.name
-      e 'button', className: 'restart', onClick:((e) ~> e.stopPropagation! ; @act 'restart'), '💣🏃'
-      e 'button', className: 'stop',    onClick:((e) ~> e.stopPropagation! ; @act 'stop'   ), '💣'
-      e 'button', className: 'start',   onClick:((e) ~> e.stopPropagation! ; @act 'start'  ), '🏃'
+      e 'button', className: 'restart', onClick:(~> @act 'restart'), '💣🏃'
+      e 'button', className: 'stop',    onClick:(~> @act 'stop'   ), '💣'
+      e 'button', className: 'start',   onClick:(~> @act 'start'  ), '🏃'
       e 'div', className: 'pid',
         e 'span', {}, @props.pid
         e 'div', className: 'ports', @props.ports.map (port, i) -> e 'span', key:i, className:'port', port
       e 'div', className: 'logwrapOuter', e 'div', className: 'logwrapInner', e ProcessLog,
-        {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name}
+        {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name} <<< toggleExpand: ~> @setState expand: not @state.expand
       e ProcessConfig,
-        {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand}
+        {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand} <<< toggleExpand: ~> @setState expand: not @state.expand
 ProcessItem.defaultProps = pid: -1, ports: []
 
 
@@ -141,6 +139,7 @@ class ProcessLog extends React.PureComponent
         e 'pre', {}, s
     if @state.log.length > 0 then e 'div',
       className: "log",
+      onClick: @props.toggleExpand
       @state.log.slice(-30).map buildItem
     else e 'span', {}, 'no log yet'
 
@@ -149,16 +148,36 @@ class ProcessConfig extends React.Component
   ->
     @state = do
       json: null
+      dirtyCompare: 'null'
+      pending: false
+      flash: null
   componentDidUpdate: (prevProps) ->
-    if @props.expand and not prevProps.expand
-      res <~ fetch @props.url .catch((e) -> Promise.resolve e) .then _
-      if res.status isnt 200 then return
-      json <~ res.json!.then _
-      @setState {json}
+    if @props.expand and not prevProps.expand then @refreshConfig!
+  refreshConfig: (callback) ->
+    res <~ fetch @props.url .catch((e) -> Promise.resolve e) .then _
+    if res.status isnt 200 then return callback!
+    json <~ res.json!.then _
+    @setState {json, dirtyCompare: JSON.stringify json}, callback
   render: ->
-    e 'div', className:'config',
-      e json_component(@state.json),
-        json: @state.json
-        setValue: (val) ~> @setState json:val
+    if not @props.expand
+      e 'div', className:'config',
+        e 'button', onClick: @props.toggleExpand, '🛠'
+    else
+      dirty = JSON.stringify(@state.json) isnt @state.dirtyCompare
+      e 'div',
+        className:"config #{@state.pending and 'pending' or ''} #{@state.flash or ''}",
+        onAnimationEnd: ~> @setState flash: null
+        e 'button',
+          className: dirty and 'unlocked' or 'locked'
+          onClick: ~> if dirty
+            @setState pending: true
+            res <~ fetch(@props.url, method:'PUT', body:JSON.stringify @state.json) .catch((e) -> Promise.resolve e) .then _
+            if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
+            @refreshConfig ~> @setState pending: false
+          ''
+        e 'button', onClick: @props.toggleExpand, '🗙'
+        e json_component(@state.json),
+          json: @state.json
+          setValue: (val) ~> @setState json:val
 
 ReactDOM.render React.createElement(Dashboard), document.getElementById "app"
