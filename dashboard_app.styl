@@ -42,32 +42,29 @@ body
 .procs
   overflow-y: scroll
   height: 100%
-.procs table
-  table-layout: fixed
-  position: relative
   text-align: center
-  border-collapse: collapse
   width: 100%
-  overflow: scroll
   .proc
     border-bottom: 3px solid #888
+    display: flex
+    align-items: center
 
 // process headerline
 .proc
-  .status, .name, .start, .stop, .restart
-    font: 1em sans-serif
+  font: 1em sans-serif
+  position: relative
+  .status { width: 2em }
+  .name { width: 5em }
+  .start, .stop, .restart
     padding: 5px
   button
     cursor: pointer
     padding: 0
     border: none
     background: #0000
-  .name { width: 5em }
-  .status, .start, .stop { width: .5em }
-  .restart { width: 1.8em }
-  .start button:hover { text-shadow: 2px 2px 2px #0f0 }
-  .restart button:hover { text-shadow: 2px 2px 2px #ff0 }
-  .stop button:hover { text-shadow: 2px 2px 2px #f00 }
+  .start:hover { text-shadow: 2px 2px 2px #0f0 }
+  .restart:hover { text-shadow: 2px 2px 2px #ff0 }
+  .stop:hover { text-shadow: 2px 2px 2px #f00 }
   .pid
     width: 4em
     font: 1em monospace
@@ -78,21 +75,19 @@ body
       position: absolute
       color: #000
       background: #fff
-      font: 1.5em monospace
-      span { padding: 5px 10px }
-      z-index: 1
-      top: 0px
-  .td-log, .td-config { width: 35% }
+      font: 1em monospace
+      span { padding: 5px }
+  .log, .config { width: 30% }
 
   // flash
   &:after
     content: ' '
     position: absolute
     width: 100%
+    height: 100%
     transition-duration: 1s
     pointer-events: none
-    z-index: 2
-    left: 0
+    z-index: 1
   &.pending:after
     pointer-events: all
     cursor: wait
@@ -109,15 +104,15 @@ body
   &.running
     background: #cfc
     color: #080
-    .start button { visibility: hidden }
+    .start { visibility: hidden }
   &.notrunning
     background: #ffc
     color: #880
-    .stop button, .restart button { visibility: hidden }
+    .stop, .restart { visibility: hidden }
   &.stopped
     background: #caa
     .name { color: #600 }
-    .start button { visibility: hidden }
+    .start { visibility: hidden }
 
 // log
 .proc .log
@@ -145,18 +140,16 @@ body
 
 // expanding
 .procs .proc
-  .log, .config, &:after
+  .log, .config
     overflow: hidden
     height: 50px
-    min-height: 50px;
     transition-duration: .1s
   &.expand
-    .log, .config, &:after
+    .log
       overflow: auto
+      height: 300px
+    .config
       height: auto
-      // height: 300px
-      min-height: 300px
-
 
 
 

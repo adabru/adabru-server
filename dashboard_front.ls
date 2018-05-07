@@ -52,8 +52,8 @@ class Dashboard extends React.Component
           style:
             color: {'no':'#aa0000', 'pending':'#aaaa00'}[@state.approved]
     else
-      e 'div', className: 'procs', e 'table', {},
-        e 'tbody', {}, @state.procs.map (proc, i) ~>
+      e 'div', className: 'procs',
+        @state.procs.map (proc, i) ~>
           e ProcessItem, {key:proc.name} <<< @state{token} <<< @{heartbeat} <<< proc
 
 
@@ -76,23 +76,24 @@ class ProcessItem extends React.Component
       or (@props['ports'].some (p) ~> not p in nextProps['ports'])
       or (Object.keys(@state).some (k) ~> @state[k] isnt nextState[k])
   render: ->
-    e 'tr',
-      onClick: ({target}) ~> if target.tagName is 'TD' then @setState expand: not @state.expand
+    e 'div',
+      onClick: ({currentTarget, target}) ~>
+        if currentTarget in [target, target.parentElement] then @setState expand: not @state.expand
       className: "proc #{@props.status.replace ' ', ''} #{@state.pending and 'pending' or ''} #{@state.expand and 'expand' or ''} #{@state.flash ? ''}",
       onAnimationEnd: ~> @setState flash: null
-      e 'td', className: 'status', {'running':'', 'not running':'⚠', 'stopped':'☠'}[@props.status]
-      e 'td',
+      e 'span', className: 'status', {'running':'', 'not running':'⚠', 'stopped':'☠'}[@props.status]
+      e 'span',
         className: 'name',
         @props.name
-      e 'td', className: 'restart', e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'restart'), '💣🏃'
-      e 'td', className: 'stop',    e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'stop'   ), '💣'
-      e 'td', className: 'start',   e 'button', onClick:((e) ~> e.stopPropagation! ; @act 'start'  ), '🏃'
-      e 'td', className: 'pid',
+      e 'button', className: 'restart', onClick:((e) ~> e.stopPropagation! ; @act 'restart'), '💣🏃'
+      e 'button', className: 'stop',    onClick:((e) ~> e.stopPropagation! ; @act 'stop'   ), '💣'
+      e 'button', className: 'start',   onClick:((e) ~> e.stopPropagation! ; @act 'start'  ), '🏃'
+      e 'div', className: 'pid',
         e 'span', {}, @props.pid
         e 'div', className: 'ports', @props.ports.map (port, i) -> e 'span', key:i, className:'port', port
-      e 'td', className: 'td-log', e ProcessLog,
+      e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name}
-      e 'td', className: 'td-config', e ProcessConfig,
+      e ProcessConfig,
         {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand}
 ProcessItem.defaultProps = pid: -1, ports: []
 
