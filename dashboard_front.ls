@@ -10,6 +10,7 @@ class Dashboard extends React.Component
       token: ''
       approved: 'no'
       procs: []
+      beatPhase: 0
     @nextBeat = null
   componentDidMount: ->
     if (localStorage.getItem 'token')? then @putToken that
@@ -25,6 +26,7 @@ class Dashboard extends React.Component
 
     token = @state.token
     res <~ fetch "proc?token=#token" .catch((e) -> Promise.resolve e) .then _
+    if res.status? then @setState beatPhase: (@state.beatPhase + 1) % 2
     if res.status is 403 then return @setState approved: 'no', proceed
     if res.status isnt 200 then return proceed!
     procs <~ res.json!.then _
@@ -42,19 +44,23 @@ class Dashboard extends React.Component
     @setState {procs}, proceed
   render: ->
     if @state.approved isnt 'yes'
-      e 'div',
-        className: 'token'
-        e 'input',
-          value: @state.token
-          placeholder: 'enter token'
-          autoFocus: true
-          onChange: (e) ~> @putToken e.target.value
-          style:
-            color: {'no':'#aa0000', 'pending':'#aaaa00'}[@state.approved]
+      e 'div', className:'dashboard',
+        e 'header', {},
+          e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+          e 'input',
+            className: 'token'
+            value: @state.token
+            placeholder: 'enter token'
+            autoFocus: true
+            onChange: (e) ~> @putToken e.target.value
+            style:
+              color: {'no':'#aa0000', 'pending':'#aaaa00'}[@state.approved]
     else
-      e 'div', className: 'procs',
-        @state.procs.map (proc, i) ~>
-          e ProcessItem, {key:proc.name} <<< @state{token} <<< @{heartbeat} <<< proc
+      e 'div', className:'dashboard',
+        e 'header', {}, e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+        e 'div', className: 'procs',
+          @state.procs.map (proc, i) ~>
+            e ProcessItem, {key:proc.name} <<< @state{token} <<< @{heartbeat} <<< proc
 
 
 

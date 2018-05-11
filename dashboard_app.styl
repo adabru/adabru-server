@@ -57,6 +57,42 @@ body
   background-color: #fff
   margin: 0
 
+.dashboard
+  header
+    background: #a6a
+    align-items: center
+    display: flex
+    height: 3em
+  .heartbeat
+    font-size: 2em
+    width: 1.5em
+    text-align: center
+    padding: 5px
+    color: #aaa
+    pointer-events: none
+    &.phase0
+      @keyframes phase0
+        0%   { font-size: 2.5em ; color: #fac ; text-shadow: 0px 0px 50px #f33 }
+        20%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 40px #f33 }
+        80%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 5px #f33 }
+        100% { font-size: 2em ; color: #aaa ; text-shadow: 0px 0px 0px #f330 }
+      animation-iteration-count: 1
+      animation-name: phase0
+      animation-duration: 5s
+    &.phase1
+      @keyframes phase1
+        0%   { font-size: 2.5em ; color: #fac ; text-shadow: 0px 0px 50px #f33 }
+        20%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 40px #f33 }
+        80%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 5px #f33 }
+        100% { font-size: 2em ; color: #aaa ; text-shadow: 0px 0px 0px #aaa }
+      animation-iteration-count: 1
+      animation-name: phase1
+      animation-duration: 5s
+  .token
+    margin-left: 50px
+    padding: 5px
+    background: #fef
+
 // process listing
 .procs
   overflow-y: scroll
