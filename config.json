@@ -1,0 +1,43 @@
+{
+  "env": {
+    "routerport": 7500,
+    "ciport": 7501,
+    "logport": 7502,
+    "logbackendport": 7503,
+    "dashboardport": 7504
+  },
+  "processes": {
+    "router": {
+      "script": "./router.js",
+      "args": {
+        "port": "${routerport}",
+        "http_redirect": "7080->${routerport}",
+        "routes": {
+          "localhost(:[0-9]+)?/admin": "${dashboardport}"
+        }
+      }
+    },
+    "log": {
+      "script": "./logserver.js",
+      "args": [
+        "${logport}",
+        "${logbackendport}"
+      ]
+    },
+    "dashboard": {
+      "script": "./dashboard.js",
+      "args": {
+        "dashboardport": "${dashboardport}",
+        "ciport": "${ciport}",
+        "logbackendport": "${logbackendport}",
+        "token": "abc123"
+      }
+    }
+  },
+  "webhooks": {
+    "adabru-server": {
+      "token": "123",
+      "path": "."
+    }
+  }
+}
