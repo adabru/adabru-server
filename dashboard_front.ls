@@ -14,7 +14,6 @@ class Dashboard extends React.Component
     @nextBeat = null
   componentDidMount: ->
     if (localStorage.getItem 'token')? then @putToken that
-    if (localStorage.getItem 'procs')? then @setState procs: JSON.parse that
   putToken: (token) ->
     @setState {approved: 'pending', token}, @heartbeat
   heartbeat: (callback) ~>
@@ -34,13 +33,12 @@ class Dashboard extends React.Component
     localStorage.setItem 'token', token
     @setState {approved: 'yes', token, procs}, callback
     callback := ->
-    # central notification fo log refreshing
+    # central notification for log refreshing
     res <~ fetch "log?token=#token" .then _
     if res.status isnt 200 then return proceed!
     loginfo <~ res.json!.then _
     procs := procs.map (p) ~>
       p <<< logsize: loginfo.find((x) -> x.name is p.name).size
-    localStorage.setItem 'procs', JSON.stringify procs
     @setState {procs}, proceed
   render: ->
     if @state.approved isnt 'yes'
@@ -79,7 +77,7 @@ class ProcessItem extends React.Component
   shouldComponentUpdate: (nextProps, nextState) ->
     (Object.keys(@props).some (k) ~> k isnt 'ports' and @props[k] isnt nextProps[k])
       or (@props['ports'].length isnt nextProps['ports'].length)
-      or (@props['ports'].some (p) ~> not p in nextProps['ports'])
+      or (@props['ports'].some (p) ~> not (p in nextProps['ports']))
       or (Object.keys(@state).some (k) ~> @state[k] isnt nextState[k])
   render: ->
     e 'div',
@@ -109,16 +107,10 @@ class ProcessLog extends React.PureComponent
       log: []
       logsize: 0
   componentDidMount: ->
-    if (localStorage.getItem "log_#{@props.name}")?
-      @setState JSON.parse(that), @refreshLog
-    else
-      @refreshLog!
+    @refreshLog!
     # refresh elapsed time display
     @updateInterval = setInterval (~>@forceUpdate!), 1000
-  componentDidUpdate: (prevProps, prevState) ->
-    @refreshLog!
-    if @state.logsize isnt prevState.logsize
-      localStorage.setItem "log_#{@props.name}", JSON.stringify @state{log,logsize}
+  componentDidUpdate: (prevProps, prevState) -> @refreshLog!
   refreshLog: ->
     if @state.logsize is @props.logsize then return
     # prevent further updates

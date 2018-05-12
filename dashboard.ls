@@ -3,6 +3,11 @@ require! [fs,http,url]
 
 {dashboardport, ciport, logbackendport, token} = JSON.parse process.argv.2
 
+# token security
+#   alphabet: a-zA-Z0-9=25+25+10=60, code: 60^token_length
+#   1y brute force attack, successrate: 365*24*60*60*1000 / t_min / 60^tokenlength
+#   t_min = 1ms (server response time overestimate) → [tokenlength, successrate]: [5, 100%], [6, 68%], [7, 1.2%], [8, 0.02%]
+
 http.createServer (req, res) ->
   answer = (code, message) -> res.writeHead code ; res.end message
   proxy = (port, path, errMsg) ->
@@ -23,7 +28,7 @@ http.createServer (req, res) ->
     case _url.pathname is /\/$/
       answer 200, '
         <head><meta charset="utf-8"></head>
-        <div id="app"><h1>Dashboard</h1></div>
+        <div id="app"><h1 style="margin:0;top:0;left:0;width:100vw;position:fixed;text-align:center;line-height:100vh;">⌛</h1></div>
         <script src="dashboard_app.js"></script>
         <link href="dashboard_app.css" rel="stylesheet">
       '
