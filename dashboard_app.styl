@@ -58,9 +58,13 @@ body
   margin: 0
 
 .dashboard
+  display: flex
+  flex-direction: column
+  height: 100%
   header
     background: #a6a
     align-items: center
+    flex-shrink: 0
     display: flex
     height: 3em
   .heartbeat
@@ -96,7 +100,7 @@ body
 // process listing
 .procs
   overflow-y: scroll
-  height: 100%
+  flex-grow: 1
   text-align: center
   width: 100%
   .proc
