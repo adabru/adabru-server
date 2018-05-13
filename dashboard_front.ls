@@ -38,7 +38,7 @@ class Dashboard extends React.Component
     if res.status isnt 200 then return proceed!
     loginfo <~ res.json!.then _
     procs := procs.map (p) ~>
-      p <<< logsize: loginfo.find((x) -> x.name is p.name).size
+      p <<< if loginfo.find((x) -> x.name is p.name) then logsize: that.size else null
     @setState {procs}, proceed
   render: ->
     if @state.approved isnt 'yes'
