@@ -45,7 +45,8 @@ supervisor = new
     cwd ?= '.'
     args ?= ''
     env ?= {}
-    child_log = child_process.spawn 'node', ['./logpipe.js', logname, logport], stdio: ['pipe', 'ignore', 'ignore']
+    console.log process.cwd!
+    child_log = child_process.spawn 'node', ['./.build/logpipe.js', logname, logport], stdio: ['pipe', 'ignore', 'ignore']
       ..unref!
     _args = switch
       case typeof args is 'string' then args.split ' '

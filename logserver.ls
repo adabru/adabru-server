@@ -24,16 +24,16 @@ date_timestamp = ->
 
 
 files = {}
-try fs.mkdirSync './log' catch e then if e.code isnt 'EEXIST' then console.error e ; process.exit -1
-fs.readdirSync './log'
+try fs.mkdirSync './.cache/log' catch e then if e.code isnt 'EEXIST' then console.error e ; process.exit -1
+fs.readdirSync './.cache/log'
   # existing logs
   .sort (a,b) -> b > a
   .filter (e,i,a) -> i is ( a.findIndex (_e) ->
     /.*-(.*)/.exec(_e).1 is /.*-(.*)/.exec(e).1 )
   .map (p) ->
     [_, date, f] = /(.*)-(.*)/.exec p
-    logsize = fs.statSync "./log/#p" .size
-    files[f] = {logsize, date, stream: fs.createWriteStream "./log/#p", flags: 'a'}
+    logsize = fs.statSync "./.cache/log/#p" .size
+    files[f] = {logsize, date, stream: fs.createWriteStream "./.cache/log/#p", flags: 'a'}
 date_logrotate = ->
   # 2017-07
   d = new Date!
@@ -44,17 +44,17 @@ write_log = (s, f) ->
   switch
     # no log file yet
     case not files[f]?
-      files[f] = logsize: 0, date: d, stream: fs.createWriteStream "./log/#{d}-#{f}", flags: 'a'
+      files[f] = logsize: 0, date: d, stream: fs.createWriteStream "./.cache/log/#{d}-#{f}", flags: 'a'
     # log file for obsolete month
     case d isnt files[f].date
       files[f].stream?.end!
-      files[f] = logsize: 0, date: d, stream: fs.createWriteStream "./log/#{d}-#{f}", flags: 'a'
+      files[f] = logsize: 0, date: d, stream: fs.createWriteStream "./.cache/log/#{d}-#{f}", flags: 'a'
     # log size exceeded
     case files[f].logsize > logsizelimit
       return
     # previously closed
     case not files[f].stream?
-      files[f].stream = fs.createWriteStream "./log/#{d}-#{f}", flags: 'a'
+      files[f].stream = fs.createWriteStream "./.cache/log/#{d}-#{f}", flags: 'a'
     # log file ready
     else
   files[f].stream.write s
@@ -109,9 +109,9 @@ http_server = http.createServer (req, res) ->
       answer 400, "request must be / or /name but is #{req.url}"
     case req.url is "/"
       # get all names and sizes of log files
-      (e,files) <- fs.readdir './log', _
+      (e,files) <- fs.readdir './.cache/log', _
       Promise.all(
-        files.map (f) -> new Promise (y,n) -> fs.stat "./log/#f", (e,s) ->
+        files.map (f) -> new Promise (y,n) -> fs.stat "./.cache/log/#f", (e,s) ->
           if e? then n e else y {name: /[^-]*$/.exec(f).0, s.size, mtime:s.mtimeMs}
       ).catch(
         (e) -> console.log e ; answer 500, e.stack
@@ -125,12 +125,12 @@ http_server = http.createServer (req, res) ->
     else
       # concat logs of one process
       name = /[^\/]+$/.exec(req.url).0
-      (e,files) <- fs.readdir './log', _
+      (e,files) <- fs.readdir './.cache/log', _
       files = files.filter (f) -> f.endsWith "-#{name}"
       if files.length is 0
         return answer 404, "no logs for process #name yet"
       Promise.all(
-        files.map (f) -> (util.promisify fs.readFile) "./log/#f", "utf-8"
+        files.map (f) -> (util.promisify fs.readFile) "./.cache/log/#f", "utf-8"
       ).catch(
         (e) -> console.log e ; answer 500, e.stack
       ).then (ds) ->

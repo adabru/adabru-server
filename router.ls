@@ -9,8 +9,8 @@ $ = http_redirect ; http_redirect = {} ; [, http_redirect.from, http_redirect.to
 
 start_router = (host, port, cb) ->
   signing =
-    key: fs.readFileSync './key.pem'
-    cert: fs.readFileSync './cert.pem'
+    key: fs.readFileSync './.config/key.pem'
+    cert: fs.readFileSync './.config/cert.pem'
   https.createServer signing, (req, res) ->
     href = req.headers.host + req.url
     r = Object.keys(routes).find (r) -> (new RegExp r).test req.headers.host + req.url
@@ -41,8 +41,8 @@ state = {}
 heartbeat = ->
   setTimeout heartbeat, 60*60*1000
   mtime =
-    key: fs.statSync('./key.pem').mtime.getTime!
-    cert: fs.statSync('./cert.pem').mtime.getTime!
+    key: fs.statSync('./.config/key.pem').mtime.getTime!
+    cert: fs.statSync('./.config/cert.pem').mtime.getTime!
   if not state.router?
     state.mtime = mtime
     state.router = start_router host, port, -> console.log "router running at https://#{host}:#{port}/"

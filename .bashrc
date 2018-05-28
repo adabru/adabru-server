@@ -1,7 +1,7 @@
 cli(){
   if [[ $1 == log && -n $2 ]]
-  then node ./cli.js $@ | less -r +G
-  else node ./cli.js $@
+  then node ./.build/cli.js $@ | less -r +G
+  else node ./.build/cli.js $@
   fi
 }
 cli_complete(){
@@ -10,7 +10,7 @@ cli_complete(){
     COMPREPLY=( $(compgen -W "start stop log ls restart" -- $2) )
   fi
   if [[ $COMP_CWORD == 2 ]] ; then
-    procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" config.json)
+    procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" .config/config.json)
     COMPREPLY=( $(compgen -W "$procs ci" -- $2) )
   fi
 }

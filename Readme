@@ -200,9 +200,9 @@ man systemd.resource-control
 
 ||
 |Setup| ```
-  lsc -wc ./*.ls &
+  lsc -o ./.build -wc ./*.ls &
+  stylus -o ./.build -w &
   webpack --mode=development -w &
-  stylus -w &
   . .bashrc
   ```
 |Start| ```

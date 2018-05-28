@@ -8,7 +8,7 @@
   },
   "processes": {
     "router": {
-      "script": "./router.js",
+      "script": "./.build/router.js",
       "args": {
         "port": "${routerport}",
         "http_redirect": "7080->${routerport}",
@@ -18,14 +18,14 @@
       }
     },
     "log": {
-      "script": "./logserver.js",
+      "script": "./.build/logserver.js",
       "args": [
         "${logport}",
         "${logbackendport}"
       ]
     },
     "dashboard": {
-      "script": "./dashboard.js",
+      "script": "./.build/dashboard.js",
       "args": {
         "dashboardport": "${dashboardport}",
         "ciport": "${ciport}",

@@ -19,7 +19,7 @@ help = -> console.log '''
 
 '''
 
-config = JSON.parse fs.readFileSync "./config.json"
+config = JSON.parse fs.readFileSync "./.config/config.json"
 supervisor = require "./supervisor.js"
 
 fetch = (service, port, path, callback) ->
@@ -81,7 +81,7 @@ if res? then (switch
     (pid) <- supervisor.pgrep /.\/ci.js/, _
     <- supervisor.terminate pid, _
     console.log " ✔"
-    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', args:'./config.json', logport:config.env.logport}).pid}"
+    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./.build/ci.js', args:'./.config/config.json', logport:config.env.logport}).pid}"
   |m /restart .+/
     (res, status) <- fetch "ci", config.env.ciport, "/stop/#{process.argv.3}", _
     console.log res, status
@@ -98,7 +98,7 @@ if res? then (switch
 ) else (switch
   |m /start( ci)?/ then fallthrough
   |m /restart( ci)?/
-    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./ci.js', args:'./config.json', logport:config.env.logport}).pid}"
+    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./.build/ci.js', args:'./.config/config.json', logport:config.env.logport}).pid}"
   |m /ls/ then fallthrough
   |m /start .+/ then fallthrough
   |m /stop( ci)?/ then fallthrough

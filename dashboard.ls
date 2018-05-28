@@ -34,10 +34,10 @@ http.createServer (req, res) ->
       '
     case _url.pathname is /\/dashboard_app.js$/
       res.writeHead 200, 'content-type': 'application/javascript'
-      fs.createReadStream('./dashboard_app.js').pipe res
+      fs.createReadStream('./.build/dashboard_app.js').pipe res
     case _url.pathname is /\/dashboard_app.css$/
       res.writeHead 200, 'content-type': 'text/css'
-      fs.createReadStream('./dashboard_app.css').pipe res
+      fs.createReadStream('./.build/dashboard_app.css').pipe res
     case _url.query.token isnt token
       answer 403, "falsches token"
     case _url.pathname is /\/proc$/

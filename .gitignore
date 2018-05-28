@@ -1,5 +1,6 @@
 node_modules
 *.js
+!webpack.config.js
 *.css
 *.map
 absh.ls
