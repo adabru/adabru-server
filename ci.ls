@@ -48,14 +48,14 @@ update_processes = (thresholdtime) ->
     process.exit!
 
 saveState = ->
-  fs.writeFileSync './ci_state.json', JSON.stringify state
+  fs.writeFileSync './.cache/ci_state.json', JSON.stringify state
 
 try config = JSON.parse fs.readFileSync config_path
 catch e
   console.error e
   process.exit -1
 supervisor = require './supervisor.js'
-try state = JSON.parse fs.readFileSync './ci_state.json'
+try state = JSON.parse fs.readFileSync './.cache/ci_state.json'
 state = {pid:{}} <<< state
 state.pid['ci'] = process.pid
 validate_webhook = (req, token, cb) ->
