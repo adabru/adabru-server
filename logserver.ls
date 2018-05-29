@@ -74,7 +74,7 @@ recv_msg = (msg, id) ->
   console.debug "received [#{msg}]"
   # each sender must send its (unique) name as first message
   if not sender_name[id]?
-    [, sender_name[id], msg] = /(.*?)\n(.*)$/.exec(msg) ? []
+    [, sender_name[id], msg] = /^(.*?)\n([\s\S]*)$/.exec(msg) ? []
   if msg isnt ''
     s = JSON.stringify(d:Date.now!, s:msg) + ",\n"
     write_log s, sender_name[id]

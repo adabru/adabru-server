@@ -222,3 +222,30 @@ man systemd.resource-control
     ```
     node test_log.js
     ```
+|Debug|
+  - processes log via ↑logpipe.js , to see output:
+
+    └▪nc -kl ::1 8123↵
+
+    ```
+    sock = net.createConnection(7601, "::1")
+    sock.on 'connect', -> sock.write "connected!\n"
+    ```
+
+    or with udp for concurrent connections:
+
+    ```
+    python -c "
+    import sys, socket
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    s.bind(('::1',9999))
+    while True:
+      t = s.recvfrom(8192)
+      print(t[0].decode('utf8'), end='')
+    "
+    ```
+
+    ```
+    debug_sock = require('dgram').createSocket('udp6');
+    debug_sock.send("connected!\n", 9999)
+    ```
