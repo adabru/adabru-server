@@ -58,8 +58,8 @@
   |* `/ls`
   |* `/start/[proc]`
   |* `/stop/[proc]`
-  |GET `/config/[proc]`
-  |PUT `/config/[proc]`
+  |GET `/config`
+  |PUT `/config`
 |cli (frontend)|
   - frontend interface to ci and log (see graphic)
   - └▪cli ls↵
@@ -82,8 +82,8 @@
   |`* /proc/[name]/start`|
   |`* /proc/[name]/stop`|
   |`* /proc/[name]/restart`|
-  |`GET /proc/[name]/config`|get cli JSON argument|`string` or `object` or … (JSON)
-  |`PUT /proc/[name]/config`|set cli JSON argument|`string` or `object` or … (JSON)
+  |`GET /config`|get cli JSON argument|JSON (see ↑config.json template)
+  |`PUT /config`|set cli JSON argument|JSON (see ↑config.json template)
   |`* /log[/proc]`|see [adabru-log](./Log)
 
   - first cli argument (`JSON.stringify`)

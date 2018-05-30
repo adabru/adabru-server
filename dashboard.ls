@@ -48,9 +48,8 @@ http.createServer (req, res) ->
     case _url.pathname is /\/proc\/(.*)\/stop$/
       name = /\/proc\/(.*)\/stop$/.exec(_url.pathname).1
       proxy ciport, "/stop/#name", "ci service request failed"
-    case _url.pathname is /\/proc\/(.*)\/config$/
-      name = /\/proc\/(.*)\/config$/.exec(_url.pathname).1
-      proxy ciport, "/config/#name", "ci service request failed"
+    case _url.pathname is /\/config$/
+      proxy ciport, "/config", "ci service request failed"
     case _url.pathname is /\/proc\/(.*)\/restart$/
       name = /\/proc\/(.*)\/restart$/.exec(_url.pathname).1
       (e, res, code) <- fetch ciport, "/stop/#name", _

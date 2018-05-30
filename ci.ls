@@ -123,18 +123,12 @@ http.createServer (req, res) ->
         saveState!
         <- supervisor.terminate pid, _
         answer 200, "#name stopped"
-      case req.url is /\/config\//
-        name = /[^\/]+$/.exec(req.url).0
-        if name isnt 'ci' and not config.processes[name]?
-          return answer 404, "process #name not found!"
+      case req.url is '/config'
         if req.method is 'GET'
-          answer 200, JSON.stringify do
-            if name is 'ci' then _config = {} <<< config ; delete _config.processes ; _config
-            else then config.processes[name]
+          answer 200, JSON.stringify config
         else /*PUT*/
           (body) <- to_string req, _
-          if name is 'ci' then config <<< JSON.parse body
-          else            then config.processes[name] = JSON.parse body
+          config := JSON.parse body
           e <- fs.writeFile config_path, (JSON.stringify config, ' ', 2), _
           if e? then answer 500, "could not write config: #{e.stack}"
           else  then answer 200, "config updated"

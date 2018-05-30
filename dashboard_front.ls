@@ -10,6 +10,7 @@ class Dashboard extends React.Component
       token: ''
       approved: 'no'
       procs: []
+      config: null
       beatPhase: 0
     @nextBeat = null
   componentDidMount: ->
@@ -33,13 +34,16 @@ class Dashboard extends React.Component
     localStorage.setItem 'token', token
     @setState {approved: 'yes', token, procs}, callback
     callback := ->
-    # central notification for log refreshing
+    # central notification for log and config refreshing
     res <~ fetch "log?token=#token" .then _
     if res.status isnt 200 then return proceed!
     loginfo <~ res.json!.then _
     procs := procs.map (p) ~>
       p <<< if loginfo.find((x) -> x.name is p.name) then logsize: that.size else null
-    @setState {procs}, proceed
+    res <~ fetch "config?token=#token" .then _
+    if res.status isnt 200 then return proceed!
+    config <~ res.json!.then _
+    @setState {procs, config}, proceed
   render: ->
     if @state.approved isnt 'yes'
       e 'div', className:'dashboard',
@@ -55,10 +59,32 @@ class Dashboard extends React.Component
               color: {'no':'#aa0000', 'pending':'#aaaa00'}[@state.approved]
     else
       e 'div', className:'dashboard',
-        e 'header', {}, e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+        e 'header', {},
+          e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+          e 'button',
+            onClick: ~>
+              link = document.createElement 'a'
+              link <<< {download:'config.json', href:"data:application/json,#{encodeURI JSON.stringify @state.config, null, 2}"}
+              link.click!
+            '💊'
+          e 'textarea', onChange: ({target}) ~> @configimport = target.value
+          e 'button',
+            onClick: ~>
+              res <~ fetch("config?token=#{@state.token}", method:'PUT', body:@configimport) .catch((e) -> Promise.resolve e) .then _
+              if res.status isnt 200 then console.log res
+              @heartbeat!
+            '🍴'
         e 'div', className: 'procs',
           @state.procs.map (proc, i) ~>
-            e ProcessItem, {key:proc.name} <<< @state{token} <<< @{heartbeat} <<< proc
+            e ProcessItem, {key:proc.name} <<< @state{token, config} <<< @{heartbeat} <<< proc
+          e 'button',
+            className:'addproc',
+            onClick: ~>
+              @state.config.processes[parseInt(Math.random!*0xffff).toString 16] = {}
+              res <~ fetch("config?token=#{@state.token}", method:'PUT', body:JSON.stringify @state.config) .catch((e) -> Promise.resolve e) .then _
+              if res.status isnt 200 then console.log res
+              @heartbeat!
+            '+'
 
 
 
@@ -96,7 +122,7 @@ class ProcessItem extends React.Component
       e 'div', className: 'logwrapOuter', e 'div', className: 'logwrapInner', e ProcessLog,
         {url: "log/#{@props.name}?token=#{@props.token}"} <<< @state{expand} <<< @props{logsize, name} <<< toggleExpand: ~> @setState expand: not @state.expand
       e ProcessConfig,
-        {url: "proc/#{@props.name}/config?token=#{@props.token}"} <<< @state{expand} <<< toggleExpand: ~> @setState expand: not @state.expand
+        {url: "config?token=#{@props.token}"} <<< @state{expand} <<< @props{name, heartbeat, config} <<< toggleExpand: ~> @setState expand: not @state.expand
 ProcessItem.defaultProps = pid: -1, ports: []
 
 
@@ -111,6 +137,8 @@ class ProcessLog extends React.PureComponent
     # refresh elapsed time display
     @updateInterval = setInterval (~>@forceUpdate!), 1000
   componentDidUpdate: (prevProps, prevState) -> @refreshLog!
+  componentWillUnmount: ->
+    clearInterval @updateInterval
   refreshLog: ->
     if @state.logsize is @props.logsize then return
     # prevent further updates
@@ -146,35 +174,63 @@ class ProcessConfig extends React.Component
   ->
     @state = do
       json: null
+      name:null
       dirtyCompare: 'null'
       pending: false
       flash: null
   componentDidUpdate: (prevProps) ->
-    if @props.expand and not prevProps.expand then @refreshConfig!
-  refreshConfig: (callback) ->
-    res <~ fetch @props.url .catch((e) -> Promise.resolve e) .then _
-    if res.status isnt 200 then return callback!
-    json <~ res.json!.then _
-    @setState {json, dirtyCompare: JSON.stringify json}, callback
+    dirtyCompare = @state.dirtyCompare
+    if prevProps.config isnt @props.config
+      dirtyCompare = JSON.stringify if @props.name isnt 'ci' then @props.config.processes[@props.name]
+        else {} <<< @props.config <<< processes:''
+      @setState {dirtyCompare}
+    if not prevProps.config? and @props.config? or not prevProps.expand and @props.expand
+      @setState {name:@props.name, json:JSON.parse dirtyCompare}
   render: ->
     if not @props.expand
       e 'div', className:'config',
-        e 'button', onClick: @props.toggleExpand, '🛠'
+        e 'div', className:'buttons',
+          e 'button', onClick: @props.toggleExpand, '🛠'
     else
-      dirty = JSON.stringify(@state.json) isnt @state.dirtyCompare
+      dirty = @props.config and (JSON.stringify(@state.json) isnt @state.dirtyCompare or @props.name isnt @state.name)
       e 'div',
         className:"config #{@state.pending and 'pending' or ''} #{@state.flash or ''}",
         onAnimationEnd: ~> @setState flash: null
-        e 'button',
-          className: dirty and 'unlocked' or 'locked'
-          onClick: ~> if dirty
-            @setState pending: true
-            res <~ fetch(@props.url, method:'PUT', body:JSON.stringify @state.json) .catch((e) -> Promise.resolve e) .then _
-            if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
-            @refreshConfig ~> @setState pending: false
-          ''
-        e 'button', onClick: @props.toggleExpand, '🗙'
+        e 'div', className:'buttons',
+          e 'button',
+            className: dirty and 'unlocked' or 'locked'
+            onClick: ~> if dirty
+              @setState pending: true
+              if @props.name isnt 'ci'
+                _config = JSON.parse JSON.stringify @props.config
+                delete _config.processes[@props.name]
+                newname = @state.name
+                while newname is '' or _config.processes[newname]? then newname += '_'
+                _config.processes[newname] = @state.json
+              else
+                _config = {} <<< @state.json <<< {processes:@props.config.processes}
+              res <~ fetch(@props.url, method:'PUT', body:JSON.stringify _config) .catch((e) -> Promise.resolve e) .then _
+              @update = true
+              # component still alive
+              if @state.name is @props.name
+                if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
+                @props.heartbeat ~> @setState pending: false
+              else
+                @props.heartbeat!
+            ''
+          e 'button',
+            className:'delete',
+            onClick: ~>
+              _config = JSON.parse JSON.stringify @props.config
+              delete _config.processes[@props.name]
+              fetch(@props.url, method:'PUT', body:JSON.stringify _config) .then ~> @props.heartbeat!
+            '🗑'
+          e 'button', onClick: @props.toggleExpand, '🗙'
+        e 'input',
+          value:@state.name or '',
+          onChange: ({target}) ~> @setState name:target.value
         e json_component(@state.json),
+          key: 'json'
           json: @state.json
           setValue: (val) ~> @setState json:val
 

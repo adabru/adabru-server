@@ -27,6 +27,7 @@ class JsonString extends React.Component
       onChange: (e) ~> @update e
       ref: (ta) ~> @ta = ta
   componentDidMount: ~> @resize!
+  componentDidUpdate: ~> @resize!
   update: ({target}) ->
     @props.setValue target.value
     @resize!
