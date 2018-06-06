@@ -27,7 +27,10 @@ http.createServer (req, res) ->
   switch
     case _url.pathname is /\/$/
       answer 200, '
-        <head><meta charset="utf-8"></head>
+        <head>
+          <meta charset="utf-8">
+          <link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAMAAAAMs7fIAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABIUExURUxpcf8AAP8AAP8HCP8AAP8AAP8AAP8AAP98lP8AAP8CA/8EBf8yPP8AAP8AAP8LDv8AAP9IVv9mfP8oMf9/mf+Ho/8AAP+bu2XmXx8AAAAYdFJOUwBTPHFIFA8J1SGMY4kwF50pscG34t1/+E9Tr2UAAACtSURBVBjTVY/ZEsMgCEVRAUGjRk3S///TErtMy8N9ODN3AQAgMnGMS2EdFXRYdCndjPwmIlte6sksZZOW2jEPU9lKBEZpwYX5mKZNkIGcJFSfjuQVkzh6kao5Za0vEv3oebe+QnvuwzNEzWdySpXUpTOr1bO1X1hjxcva+V5YsY/Lqw+jY12bo7rRrboPp+83LEpmm5I/4N4dbHMoX7DSz1AYfo53v/8BM8aP5QkltgfMYKXkdgAAAABJRU5ErkJggg==" rel="icon"/>
+        </head>
         <div id="app"><h1 style="margin:0;top:0;left:0;width:100vw;position:fixed;text-align:center;line-height:100vh;">⌛</h1></div>
         <script src="dashboard_app.js"></script>
         <link href="dashboard_app.css" rel="stylesheet">
