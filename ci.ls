@@ -82,8 +82,8 @@ http.createServer (req, res) ->
       case req.url is '/'
         # ping
         answer 200, "ci running"
-      case req.url is /\/webhook\/([\w]+)(\/restart)?$/
-        [,name,restart] = /\/webhook\/([\w]+)(\/restart)?$/.exec req.url
+      case req.url is /\/webhook\/([^\/]+)(\/restart)?$/
+        [,name,restart] = /\/webhook\/([^\/]+)(\/restart)?$/.exec req.url
         wh = config.webhooks[name]
         if not wh? then return answer 404, 'hook does not exist'
         (isOk) <- validate_webhook req, wh.token, restart, _
