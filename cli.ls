@@ -39,13 +39,13 @@ print_log = (log) ->
     m = ['Jan' 'Feb' 'Mar' 'Apr' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec']
     dt = Date.now! - d.getTime!
     diff = switch
-      case dt <                 99 * 1000 then "#{pad Math.round dt                      / 1000}s"
-      case dt <            99 * 60 * 1000 then "#{pad Math.round dt                 / 60 / 1000}m"
-      case dt <       20 * 60 * 60 * 1000 then "#{pad Math.round dt            / 60 / 60 / 1000}h"
-      case dt <   5 * 24 * 60 * 60 * 1000 then "#{pad Math.round dt       / 24 / 60 / 60 / 1000}d"
-      case dt <  35 * 24 * 60 * 60 * 1000 then "#{pad Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
-      case dt < 300 * 24 * 60 * 60 * 1000 then "#{pad Math.round dt  / 30 / 24 / 60 / 60 / 1000}m"
-      case dt <                  Infinity then "#{pad Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
+      case dt <           99*1000 then "#{pad Math.round dt                      / 1000}s"
+      case dt <        99*60*1000 then "#{pad Math.round dt                 / 60 / 1000}m"
+      case dt <     20*60*60*1000 then "#{pad Math.round dt            / 60 / 60 / 1000}h"
+      case dt <   5*24*60*60*1000 then "#{pad Math.round dt       / 24 / 60 / 60 / 1000}d"
+      case dt <  35*24*60*60*1000 then "#{pad Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
+      case dt < 300*24*60*60*1000 then "#{pad Math.round dt  / 30 / 24 / 60 / 60 / 1000}m"
+      case dt <          Infinity then "#{pad Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
     "\033[34m#{d.getUTCFullYear!} #{m[d.getUTCMonth!]} #{pad d.getUTCDate!} \033[2m#{pad d.getUTCHours!}\033[22m#{pad d.getHours!}:#{pad d.getUTCMinutes!}:#{pad d.getUTCSeconds!}\033[39m \033[33m\033[2m#{diff}\033[22m\033[39m #{line.s.trimRight!}"
   ).join '\n'
 print_process = (p) ->
@@ -80,8 +80,7 @@ if res? then (switch
     process.stdout.write "Stopping ci..."
     (pid) <- supervisor.pgrep /.\/ci.js/, _
     <- supervisor.terminate pid, _
-    console.log " ✔"
-    console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./.build/ci.js', args:'./.config/config.json', logport:config.env.logport}).pid}"
+    console.log " ✔\nci started with PID #{supervisor.start({logname:'ci', script:'./.build/ci.js', args:'./.config/config.json', logport:config.env.logport}).pid}"
   |m /restart .+/
     (res, status) <- fetch "ci", config.env.ciport, "/stop/#{process.argv.3}", _
     console.log res, status

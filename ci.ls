@@ -7,8 +7,7 @@ callme = (callback, promise) -> promise.then((d)->callback void, d).catch((e)->c
 to_string = (stream, cb) ->
   chunks = []
   stream.on "data", (c) -> chunks.push c
-  stream.on "end", ->
-    cb Buffer.concat(chunks).toString('utf-8')
+  stream.on "end", -> cb Buffer.concat(chunks).toString('utf-8')
 escaped_regex = (s) -> new RegExp(s.replace /[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 run_hook = ({name, path, commands}, callback) ->
   state.hook[name] = lines: (commands?.split '\n' or []).filter((line) -> line.trim! isnt '').map (command) -> ({command})

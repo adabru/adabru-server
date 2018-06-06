@@ -5,9 +5,7 @@ pending(col)
     0%   { box-shadow: col 0px 0px 10px inset }
     50%  { box-shadow: col 0px 0px 50px inset }
     100% { box-shadow: col 0px 0px 10px inset }
-  animation-iteration-count: infinite
-  animation-name: $name
-  animation-duration: 1s
+  animation-iteration-count: infinite ; animation-name: $name ; animation-duration: 1s
 
 feedback()
   pulse(col)
@@ -19,19 +17,16 @@ feedback()
       20%  { background: rgba(col, .8) }
       50%  { background: rgba(col, .4) }
       100% { background: rgba(col, .0) }
-    animation-iteration-count: 1
-    animation-name: $name
-    animation-duration: 1s
+    animation-iteration-count: 1 ; animation-name: $name ; animation-duration: 1s
   &.pending:after { pointer-events: all ; cursor: wait ; pending #ccf }
   &.success:after { pulse #0c0 ; _:_ }
   &.failure:after { pulse #c00 ; _:_ }
   // flash
   &:after
     content: ' '
-    position: absolute ; top: 0 ; left: 0 ; width: 100% ; height: 100%
+    position: absolute ; top: 0 ; left: 0 ; width: 100% ; height: 100% ; z-index: 1
     transition-duration: 1s
     pointer-events: none
-    z-index: 1
 
 button
   background: #bad ; border: 5px groove #fcf ; color: #fcf
@@ -56,13 +51,8 @@ body
       background: white
     textarea { resize: none ; white-space: nowrap ; overflow: hidden ; height: 90% ; width: 5em }
   .heartbeat
-    margin-right: auto
-    font-size: 2em
-    width: 1.5em
-    cursor: wait
-    text-align: center
-    padding: 5px
-    color: #aaa
+    color: #aaa ; cursor: wait
+    font-size: 2em ; text-align: center ; width: 1.5em ; padding: 5px ; margin-right: auto
     strongshadow(rad, col)
       text-shadow: 0px 0px rad col, 0px 0px rad col, 0px 0px rad col, 0px 0px rad col
     &.phase0
@@ -80,9 +70,8 @@ body
         100% { font-size: 2em ; color: #aaa ; strongshadow: 0px #f330 }
       animation-iteration-count: 1 ; animation-name: phase1 ; animation-duration: 5s
   .token
-    margin-left: 50px
-    padding: 5px
     background: #fef
+    padding: 5px ; margin-left: 50px
 
 .hookview
   background: #a6a ; padding: 5px
@@ -108,14 +97,10 @@ body
 
 // process listing
 .procs
-  overflow-y: scroll
-  flex-grow: 1
-  text-align: center
-  width: 100%
+  text-align: center ; width: 100% ; overflow-y: scroll ; flex-grow: 1
   .proc
     border-bottom: 3px solid #888
-    display: flex
-    align-items: center
+    display: flex ; align-items: center
 
 // process headerline
 .proc
@@ -131,51 +116,35 @@ body
   .restart { background: #ffaa ; color: #880a ; border: 2px groove #ffaa }
   .stop    { background: #fcca ; color: #844a ; border: 2px groove #fcca }
   .pid
-    width: 4em
-    font: 1em monospace
-    position: relative
+    font: 1em monospace ; width: 4em ; position: relative
     &:hover .ports { visibility: visible }
     .ports
-      visibility: hidden
-      position: absolute
-      color: #000
-      background: #fff
-      font: 1em monospace
+      color: #000 ; background: #fff
+      font: 1em monospace ; position: absolute ; z-index: 1 ; visibility: hidden
       span { padding: 5px }
-      z-index: 1
   .logwrapOuter
     background: #cce
     width: 30%
     .logwrapInner
-      height: 100%
-      overflow: visible
-      position: relative
-      .log
-        width: 100%
-        bottom: 0
-        position: absolute
-  .config
-    width: 30%
+      height: 100% ; overflow: visible ; position: relative
+      .log { width: 100% ; position: absolute ; bottom: 0 }
+  .config { width: 30% }
 
 
 // process status
 .proc
   &.running
-    background: #cfc
-    color: #080
+    background: #cfc ; color: #080
     .start { visibility: hidden }
   &.notrunning
-    background: #ffc
-    color: #880
+    background: #ffc ; color: #880
     .stop, .restart { visibility: hidden }
   &.stopped
     background: #caa
     .name { color: #600 }
     .start { visibility: hidden }
 
-.addproc
-  display: block
-  width: 2em
+.addproc { width: 2em ; display: block }
 
 // log
 .proc .log
@@ -186,7 +155,8 @@ body
     display: inline-flex
     pre { margin: 0 ; text-align: left }
     .date
-      color: #e49
+      color: #e49 ; user-select: none
+      font-size: .8em ; letter-spacing: 2px ; text-align: center ; min-width: 40px
       &.s { background: #f99 }
       &.m { background: #faa }
       &.h { background: #fbb }
@@ -194,16 +164,10 @@ body
       &.w { background: #fdd }
       &.o { background: #fee }
       &.y { background: #fee }
-      user-select: none
-      font-size: .8em
-      letter-spacing: 2px
-      min-width: 40px
-      text-align: center
 
 // config
 .proc .config
-  align-self: baseline
-  position: relative
+  align-self: baseline ; position: relative
   feedback()
   .buttons { display: flex }
   .buttons > button
@@ -214,9 +178,7 @@ body
     &.unlocked
       &:before { content: '🔒'; color: #c6f }
       &:after { content: '🔓'; color: #fcf }
-  & > input
-    display: block
-    margin: auto
+  & > input { display: block ; margin: auto }
 .proc.expand .config
   .buttons > button
     &:nth-child(1) { flex-grow: 3 }
@@ -226,16 +188,11 @@ body
 // expanding
 .procs .proc
   .logwrapOuter, .config
-    overflow: hidden
-    height: 50px
+    overflow: hidden ; height: 50px
     transition-duration: .1s
   &.expand
-    .logwrapOuter
-      overflow-x: auto
-      overflow-y: hidden
-      height: 300px
-    .config
-      height: auto
+    .logwrapOuter { overflow-x: auto ; overflow-y: hidden ; height: 300px }
+    .config { height: auto }
 
 
 
@@ -246,58 +203,28 @@ body
   display: flex
   & > button
     background: #c6f3
-    padding: 0 5px
-    border: none
-    margin: 0
+    font-size: .5em ; height: 3em ; padding: 0 5px ; border: none ; margin: 0
     &:hover { background: #c6f6 }
-    font-size: .5em
-    height: 3em
     &:nth-child(1) { border-radius: 0 0 0 15px }
     // 1px for shadow issue
     &:nth-child(2) { border-radius: 0 0 0 1px }
     &:nth-child(3) { border-radius: 0 0 15px 0 }
 
 .json-string
-  overflow: hidden
-  width: 300px
-  height: 300px
-  max-width: 100%
-  min-width: 100%
-  max-height: 250px
-  max-width: 250px
-  padding: 2px
-  resize: none
-  white-space: pre
-  border: none
-  border-radius: 0 0 15px 15px
-  &:focus
-    overflow: auto
-    max-width: calc(100%)
-    max-height: calc(100%)
-  &::placeholder
-    color: #ddd
+  resize: none ; border-radius: 0 0 15px 15px ; white-space: pre
+  padding: 2px ; border: none
+  min-width: 100% ; max-width: 250px ; max-height: 250px ; overflow: hidden
+  &:focus { max-width: calc(100%) ; max-height: calc(100%) ; overflow: auto }
+  &::placeholder { color: #ddd }
 
 .json-array
-  background: #8854
-  padding: 2px
-  box-sizing: border-box
-  display: flex
-  flex-wrap: wrap
-  list-style: none
+  background: #8854 ; list-style: none
+  padding: 2px ; box-sizing: border-box ; display: flex ; flex-wrap: wrap
   > li
-    display: flex
-    flex-direction: column
-    margin: 1px 1px
+    display: flex ; flex-direction: column ; margin: 1px 1px
     & > button
-      border-radius: 15px 15px 0 0
-      border-style: groove
-      border-width: 1px
-      padding: 8px
-      margin: 0
-      width: 100%
-      height: 1.5em
-      font: inherit
-      background: #c6f6
+      background: #c6f6 ; font: inherit ; border-radius: 15px 15px 0 0
+      width: 100% ; height: 1.5em ; padding: 8px ; border: 1px groove ; margin: 0
       &:hover { background: #f386 }
     & > button:last-child
       background: #c6f2
@@ -306,36 +233,20 @@ body
       border-radius: 0 0 15px 15px
       width: 100%
 
-
 .json-object
-  background: #8854
-  margin: 0
-  padding: 2px
-  box-sizing: border-box
-  display: inline-flex
-  flex-wrap: wrap
-  max-width: 100%
-  list-style: none
-  > *
-    max-width: 100%;
+  background: #8854 ; list-style: none
+  max-width: 100% ; box-sizing: border-box ; padding: 2px ; margin: 0
+  display: inline-flex ; flex-wrap: wrap
+  > * { max-width: 100% }
   > li
-    margin: 3px
-    max-width: calc(100% - 10px)
-    padding: 0
-    display: flex
-    flex-direction: column
-    align-items: center
+    max-width: calc(100% - 10px) ; padding: 0 ; margin: 3px
+    display: flex ; flex-direction: column ; align-items: center
     input
-      min-width: 100%
-      background: #c6f6
+      background: #c6f6 ; border-radius: 15px 15px 0 0
+      font-size: .9em ; min-width: 100% ; width: 100% ; padding: 2px ; border: none
+      text-align: center
       &:last-child { background: #c6f4 }
       &:last-child:hover { background: #c6f6 }
-      border-radius: 15px 15px 0 0
-      padding: 2px
-      font-size: .9em
-      border: none
-      width: 100%
-      text-align: center
     & > :nth-child(2)
       border-radius: 0 0 15px 15px
       width: 100%
