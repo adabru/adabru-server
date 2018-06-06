@@ -40,7 +40,7 @@ http.createServer (req, res) ->
       fs.createReadStream('./.build/dashboard_app.css').pipe res
     case _url.query.token isnt token
       answer 403, "falsches token"
-    case _url.pathname is /\/proc$/
+    case _url.pathname is /\/ls$/
       proxy ciport, "/ls", "ci service request failed"
     case _url.pathname is /\/proc\/(.*)\/start$/
       name = /\/proc\/(.*)\/start$/.exec(_url.pathname).1
@@ -50,6 +50,9 @@ http.createServer (req, res) ->
       proxy ciport, "/stop/#name", "ci service request failed"
     case _url.pathname is /\/config$/
       proxy ciport, "/config", "ci service request failed"
+    case _url.pathname is /\/webhook\/(.*)\/restart$/
+      name = /\/webhook\/(.*)\/restart$/.exec(_url.pathname).1
+      proxy ciport, "/webhook/#name/restart"
     case _url.pathname is /\/proc\/(.*)\/restart$/
       name = /\/proc\/(.*)\/restart$/.exec(_url.pathname).1
       (e, res, code) <- fetch ciport, "/stop/#name", _

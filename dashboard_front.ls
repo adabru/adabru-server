@@ -10,6 +10,8 @@ class Dashboard extends React.Component
       token: ''
       approved: 'no'
       procs: []
+      hooks: []
+      showhook: null
       config: null
       beatPhase: 0
     @nextBeat = null
@@ -25,14 +27,14 @@ class Dashboard extends React.Component
       @nextBeat = setTimeout (~>@heartbeat!), 1000
 
     token = @state.token
-    res <~ fetch "proc?token=#token" .catch((e) -> Promise.resolve e) .then _
+    res <~ fetch "ls?token=#token" .catch((e) -> Promise.resolve e) .then _
     if res.status? then @setState beatPhase: (@state.beatPhase + 1) % 2
     if res.status is 403 then return @setState approved: 'no', proceed
     if res.status isnt 200 then return proceed!
-    procs <~ res.json!.then _
-    procs = procs.map (p) ~> {logsize:0} <<< (@state.procs.find (x) -> x.name is p.name) <<< {name:'n/a', pid:'', ports:[]} <<< p
+    {ps, hooks} <~ res.json!.then _
+    procs = ps.map (p) ~> {logsize:0} <<< (@state.procs.find (x) -> x.name is p.name) <<< {name:'n/a', pid:'', ports:[]} <<< p
     localStorage.setItem 'token', token
-    @setState {approved: 'yes', token, procs}, callback
+    @setState {approved: 'yes', token, procs, hooks}, callback
     callback := ->
     # central notification for log and config refreshing
     res <~ fetch "log?token=#token" .then _
@@ -48,7 +50,7 @@ class Dashboard extends React.Component
     if @state.approved isnt 'yes'
       e 'div', className:'dashboard',
         e 'header', {},
-          e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+          e 'span', className:"heartbeat phase#{@state.beatPhase}", '♡'
           e 'input',
             className: 'token'
             value: @state.token
@@ -60,7 +62,14 @@ class Dashboard extends React.Component
     else
       e 'div', className:'dashboard',
         e 'header', {},
-          e 'span', className:"heartbeat phase#{@state.beatPhase}", '💙'
+          e 'span', className:"heartbeat phase#{@state.beatPhase}", '♡'
+          ...@state.hooks.map (h) ~>
+            status = h.lines.some((l) -> l.tstart? and not l.tend?) and 'running'
+              or h.lines.every((l) -> l.code is 0) and 'success' or 'failure'
+            e 'button',
+              className:"hook #status",
+              onClick: ~> @setState showhook: if @state.showhook is h.name then null else h.name,
+              h.name
           e 'button',
             onClick: ~>
               link = document.createElement 'a'
@@ -74,6 +83,7 @@ class Dashboard extends React.Component
               if res.status isnt 200 then console.log res
               @heartbeat!
             '🍴'
+        e HookView, @state{token} <<< @{heartbeat} <<< hook:@state.hooks.find((h) ~> h.name is @state.showhook)
         e 'div', className: 'procs',
           @state.procs.map (proc, i) ~>
             e ProcessItem, {key:proc.name} <<< @state{token, config} <<< @{heartbeat} <<< proc
@@ -85,6 +95,32 @@ class Dashboard extends React.Component
               if res.status isnt 200 then console.log res
               @heartbeat!
             '+'
+
+
+
+class HookView extends React.Component
+  -> @state = pending: false
+  render: ->
+    duration = (ms) ->
+      h = Math.floor   ms/60/60/1000
+      m = Math.floor ((ms/60/60/1000)%1)*60
+      s = Math.round ((ms/60/1000)%1)*60
+      "#h:#{"#m".padStart 2,0}:#{"#s".padStart 2,0}"
+    e 'div', className:"hookview #{@state.pending and 'pending' or ''}",
+      @props.hook? and e 'button',
+        onClick: ~>
+          @setState pending:true
+          res <~ fetch "webhook/#{@props.hook.name}/restart?token=#{@props.token}" .catch((e) -> Promise.resolve e) .then _
+          if res.status is 200 then @setState flash: 'success' else @setState flash: 'failure'
+          @props.heartbeat ~> @setState pending: false
+        '💣🏃'
+      @props.hook? and e 'div', {},
+        ...@props.hook.lines.map ({command,output,tstart,tend,code}) ->
+          e 'div', {},
+            e 'pre', {className: not tstart? and 'due' or not code? and 'running' or code is 0 and 'success' or 'failure'}, command
+            e 'time', {}, (not tstart? and '-' or duration (tend or Date.now!) - tstart)
+            e 'div', {}, ...(output ? []).map ({fid,data}) ->
+              e 'pre', className:"fid#fid", data
 
 
 
@@ -151,13 +187,13 @@ class ProcessLog extends React.PureComponent
     buildItem = ({d,s}, i) ~>
       dt = Date.now! - d
       diff = switch
-        case dt <                 99 * 1000 then "#{Math.round dt                      / 1000}s"
-        case dt <            99 * 60 * 1000 then "#{Math.round dt                 / 60 / 1000}m"
-        case dt <       20 * 60 * 60 * 1000 then "#{Math.round dt            / 60 / 60 / 1000}h"
-        case dt <   5 * 24 * 60 * 60 * 1000 then "#{Math.round dt       / 24 / 60 / 60 / 1000}d"
-        case dt <  35 * 24 * 60 * 60 * 1000 then "#{Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
-        case dt < 300 * 24 * 60 * 60 * 1000 then "#{Math.round dt  / 30 / 24 / 60 / 60 / 1000}o"
-        case dt <                  Infinity then "#{Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
+        case dt <           99*1000 then "#{Math.round dt                      / 1000}s"
+        case dt <        99*60*1000 then "#{Math.round dt                 / 60 / 1000}m"
+        case dt <     20*60*60*1000 then "#{Math.round dt            / 60 / 60 / 1000}h"
+        case dt <   5*24*60*60*1000 then "#{Math.round dt       / 24 / 60 / 60 / 1000}d"
+        case dt <  35*24*60*60*1000 then "#{Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
+        case dt < 300*24*60*60*1000 then "#{Math.round dt  / 30 / 24 / 60 / 60 / 1000}o"
+        case dt <          Infinity then "#{Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
       e 'div',
         key:i,
         className:"entry"
@@ -168,6 +204,7 @@ class ProcessLog extends React.PureComponent
       onClick: @props.toggleExpand
       @state.log.slice(-30).map buildItem
     else e 'span', {}, 'no log yet'
+
 
 
 class ProcessConfig extends React.Component

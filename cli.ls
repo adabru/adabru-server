@@ -62,7 +62,7 @@ m = (regex) -> new RegExp("^#{regex.source}$").test process.argv.2 + if process.
 if res? then (switch
   |m /ls/
     (res) <- fetch "ci", config.env.ciport, "/ls", _
-    ps = JSON.parse res
+    {ps} = JSON.parse res
     for p in ps
       print_process p
   |m /start( ci)?/

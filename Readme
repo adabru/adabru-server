@@ -36,6 +36,45 @@
   - monitor processes
   - twitch processes
 
+### Config / Add Service
+
+- ↑.config/config.json :
+
+  ```
+  {
+    "env": {…},
+    "processes": {…},
+    "webhooks": {…}
+  }
+  ```
+- every service and every hook must be restartable at any time (stateless)
+
+|
+|`env`|
+  variables that can be used in the rest of this configuration with `${var}`
+|`processes`|
+  ```
+  "infoaghh": {
+    "script": "../infoaghh/main.js",
+    "cwd": "../infoaghh",
+    "args": ["::1", "${infoagport}"]
+  }
+  ```
+
+  - `cwd` optional
+  - `args` can be any JSON object
+|`webhooks`|
+  ```
+  "infoaghh": {
+    "token": "abc123",
+    "path": "../infoaghh",
+    "commands": "npm install\nlsc -c"
+  }
+  ```
+
+  - set webhook path to `https://[ci root url]/webhook/infoaghh`
+  - path must lead to a git repo
+  - process-scripts that are updated are restarted
 
 ### Interfaces
 
@@ -55,6 +94,7 @@
 
   |HTTP
   |* `/webhook/[hookname]`|requires header 'x-gitlab-token' or 'x-hub-signature'
+  |* `/webhook/[hookname]/restart`|doesn't require auth
   |* `/ls`
   |* `/start/[proc]`
   |* `/stop/[proc]`
@@ -78,7 +118,10 @@
   |HTTP
   |`*`|`?token=xxx` required
   |`* /`|serve web frontend
-  |`* /proc`|all processes from config|`[{name,status,pid,ports}, …]`
+  |`* /ls`|list of processes and hooks|```
+    ps: [{name,status,pid,ports}, …],
+    hooks: [{name,lines:[{command,output,duration,code},…]}, …]
+    ```
   |`* /proc/[name]/start`|
   |`* /proc/[name]/stop`|
   |`* /proc/[name]/restart`|
@@ -248,4 +291,9 @@ man systemd.resource-control
     ```
     debug_sock = require('dgram').createSocket('udp6');
     debug_sock.send("connected!\n", 9999)
+    ```
+  - try out a webhook with
+
+    ```
+    curl -H x-gitlab-token:abc [::1]:7501/webhook/infoaghh
     ```

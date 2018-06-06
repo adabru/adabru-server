@@ -1,14 +1,15 @@
 
+pending(col)
+  $name = unquote('pending-' + substr(s("%s", col),1,3))
+  @keyframes {$name}
+    0%   { box-shadow: col 0px 0px 10px inset }
+    50%  { box-shadow: col 0px 0px 50px inset }
+    100% { box-shadow: col 0px 0px 10px inset }
+  animation-iteration-count: infinite
+  animation-name: $name
+  animation-duration: 1s
+
 feedback()
-  pending(col)
-    $name = unquote('pending-' + substr(s("%s", col),1,3))
-    @keyframes {$name}
-      0%   { box-shadow: col 0px 0px 10px inset }
-      50%  { box-shadow: col 0px 0px 50px inset }
-      100% { box-shadow: col 0px 0px 10px inset }
-    animation-iteration-count: infinite
-    animation-name: $name
-    animation-duration: 1s
   pulse(col)
     $name = unquote('pulse-' + substr(s("%s", col),1,3))
     @keyframes {$name}
@@ -21,35 +22,20 @@ feedback()
     animation-iteration-count: 1
     animation-name: $name
     animation-duration: 1s
+  &.pending:after { pointer-events: all ; cursor: wait ; pending #ccf }
+  &.success:after { pulse #0c0 ; _:_ }
+  &.failure:after { pulse #c00 ; _:_ }
   // flash
   &:after
-    top: 0
-    left: 0
     content: ' '
-    position: absolute
-    width: 100%
-    height: 100%
+    position: absolute ; top: 0 ; left: 0 ; width: 100% ; height: 100%
     transition-duration: 1s
     pointer-events: none
     z-index: 1
-  &.pending:after
-    pointer-events: all
-    cursor: wait
-    pending #ccf
-  &.success:after
-    pulse #0c0
-  &.failure:after
-    pulse #c00
 
 button
-  background: #bad
-  border: 5px groove #fcf
-  color: #fcf
-  height: 46px
-  margin: 2px
-  font-size: 2em
-  box-sizing: border-box
-
+  background: #bad ; border: 5px groove #fcf ; color: #fcf
+  height: 46px ; margin: 2px ; font-size: 2em ; box-sizing: border-box
 
 body
   background-color: #fff
@@ -57,21 +43,18 @@ body
   button { cursor: pointer }
 
 .dashboard
-  display: flex
-  flex-direction: column
-  height: 100%
+  display: flex ; flex-direction: column ; height: 100%
   header
     background: #a6a
-    align-items: center
-    flex-shrink: 0
-    display: flex
-    height: 3em
-    textarea
-      resize: none
-      white-space: nowrap
-      overflow: hidden
-      height: 90%
-      width: 5em
+    align-items: center ; flex-shrink: 0 ; display: flex ; height: 3em
+    .hook
+      font-size: 1em ; margin: 20px
+      border: 3px groove #abf ; border-radius: 50px
+      &.running { background: #ffc ; color: #880 ; &:before { content:'☕ ' } ; pending #ccf }
+      &.success { background: #cfc ; color: #080 ; &:before { content:'✼ ' } }
+      &.failure { background: #caa ; color: #600 ; &:before { content:'🛇 ' } }
+      background: white
+    textarea { resize: none ; white-space: nowrap ; overflow: hidden ; height: 90% ; width: 5em }
   .heartbeat
     margin-right: auto
     font-size: 2em
@@ -80,28 +63,48 @@ body
     text-align: center
     padding: 5px
     color: #aaa
+    strongshadow(rad, col)
+      text-shadow: 0px 0px rad col, 0px 0px rad col, 0px 0px rad col, 0px 0px rad col
     &.phase0
       @keyframes phase0
-        0%   { font-size: 2.5em ; color: #fac ; text-shadow: 0px 0px 50px #f33 }
-        20%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 40px #f33 }
-        80%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 5px #f33 }
-        100% { font-size: 2em ; color: #aaa ; text-shadow: 0px 0px 0px #f330 }
-      animation-iteration-count: 1
-      animation-name: phase0
-      animation-duration: 5s
+        0%   { font-size: 2.5em ; color: #fac ; strongshadow: 50px #f33 }
+        20%  { font-size: 2em ; color: #fac ; strongshadow: 40px #f33 }
+        80%  { font-size: 2em ; color: #fac ; strongshadow: 5px #f33 }
+        100% { font-size: 2em ; color: #aaa ; strongshadow: 0px #f330 }
+      animation-iteration-count: 1 ; animation-name: phase0 ; animation-duration: 5s
     &.phase1
       @keyframes phase1
-        0%   { font-size: 2.5em ; color: #fac ; text-shadow: 0px 0px 50px #f33 }
-        20%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 40px #f33 }
-        80%  { font-size: 2em ; color: #fac ; text-shadow: 0px 0px 5px #f33 }
-        100% { font-size: 2em ; color: #aaa ; text-shadow: 0px 0px 0px #aaa }
-      animation-iteration-count: 1
-      animation-name: phase1
-      animation-duration: 5s
+        0%   { font-size: 2.5em ; color: #fac ; strongshadow: 50px #f33 }
+        20%  { font-size: 2em ; color: #fac ; strongshadow: 40px #f33 }
+        80%  { font-size: 2em ; color: #fac ; strongshadow: 5px #f33 }
+        100% { font-size: 2em ; color: #aaa ; strongshadow: 0px #f330 }
+      animation-iteration-count: 1 ; animation-name: phase1 ; animation-duration: 5s
   .token
     margin-left: 50px
     padding: 5px
     background: #fef
+
+.hookview
+  background: #a6a ; padding: 5px
+  &.pending { pending #aac ; _:_ }
+  flex-shrink: 0 ; display: flex ; max-height: 500px
+  pre { margin: 0 }
+  > button { height: auto }
+  > div
+    background: #dde
+    display: flex ; flex-grow: 1 ; flex-direction: column ; overflow: auto
+    > div
+      display: flex
+      > pre
+        &.due { color: #0004 }
+        &.running { pending #aac ; color: #000 }
+        &.success { color: #000 }
+        &.failure { color: #a22 }
+        min-width: 200px ; word-break: break-all ; white-space: normal ; padding: 5px
+      > time { font: .8em monospace ; width: 50px ; padding: 5px }
+      > div
+        > pre.fid1 { color: #444 }
+        > pre.fid2 { color: #c00 }
 
 // process listing
 .procs
@@ -119,17 +122,14 @@ body
   font: 1em sans-serif
   position: relative
   feedback()
-  .status { width: 2em }
+  .start, .stop, .restart, .pid { visibility: hidden }
+  &:hover { .start, .stop, .restart, .pid { visibility: visible } }
+  .status { width: 1.5em }
   .name { width: 5em }
-  .start, .stop, .restart
-    padding: 5px
-    border: none
-    background: #0000
-    color: #000
-    font-size: 1em
-  .start:hover { text-shadow: 2px 2px 2px #0f0 }
-  .restart:hover { text-shadow: 2px 2px 2px #ff0 }
-  .stop:hover { text-shadow: 2px 2px 2px #f00 }
+  .start, .stop, .restart { font-size: 1em ; padding: 2px ; height: 2em }
+  .start   { background: #afaa ; color: #080a ; border: 2px groove #afaa }
+  .restart { background: #ffaa ; color: #880a ; border: 2px groove #ffaa }
+  .stop    { background: #fcca ; color: #844a ; border: 2px groove #fcca }
   .pid
     width: 4em
     font: 1em monospace
