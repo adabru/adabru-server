@@ -81,7 +81,7 @@ body
   > button { height: auto }
   > div
     background: #dde
-    display: flex ; flex-grow: 1 ; flex-direction: column ; overflow: auto
+    overflow: auto
     > div
       display: flex
       > pre
@@ -89,7 +89,7 @@ body
         &.running { pending #aac ; color: #000 }
         &.success { color: #000 }
         &.failure { color: #a22 }
-        width: 400px ; word-break: break-all ; white-space: normal ; padding: 5px
+        min-width: 400px ; width: 400px ; word-break: break-all ; white-space: normal ; padding: 5px
       > time { font: .8em monospace ; width: 50px ; padding: 5px }
       > div
         > pre.fid1 { color: #444 }
@@ -213,8 +213,8 @@ body
 .json-string
   resize: none ; border-radius: 0 0 15px 15px ; white-space: pre
   padding: 2px ; border: none
-  min-width: 100% ; max-width: 250px ; max-height: 250px ; overflow: hidden
-  &:focus { max-width: calc(100%) ; max-height: calc(100%) ; overflow: auto }
+  min-width: 100% ; max-width: 100% ; max-height: 250px ; overflow: hidden
+  &:focus { max-width: calc(80%) ; max-height: calc(80%) ; overflow: auto }
   &::placeholder { color: #ddd }
 
 .json-array

@@ -25,6 +25,8 @@ class JsonString extends React.Component
       placeholder: 'text'
       value: @props.json
       onChange: (e) ~> @update e
+      onFocus: (e) ~> @update e
+      onBlur: (e) ~> @update e
       ref: (ta) ~> @ta = ta
   componentDidMount: ~> @resize!
   componentDidUpdate: ~> @resize!
@@ -37,6 +39,8 @@ class JsonString extends React.Component
     dummy.style = "width:0; height:0; resize:none; overflow:hidden; white-space:pre; padding:4px 4px; min-width:0"
     document.body.append dummy
     @ta.style <<< { height:dummy.scrollHeight, width:dummy.scrollWidth }
+    if @ta is document.activeElement and @ta.scrollWidth > @ta.clientWidth + 16
+      @ta.style.height = parseInt(/[\d]+/.exec(@ta.style.height).0) + 12 + 'px'
     document.body.removeChild(dummy)
 
 

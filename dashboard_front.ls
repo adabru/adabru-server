@@ -104,7 +104,7 @@ class HookView extends React.Component
     duration = (ms) ->
       h = Math.floor   ms/60/60/1000
       m = Math.floor ((ms/60/60/1000)%1)*60
-      s = Math.round ((ms/60/1000)%1)*60
+      s = Math.floor ((ms/60/1000)%1)*60
       "#h:#{"#m".padStart 2,0}:#{"#s".padStart 2,0}"
     e 'div', className:"hookview #{@state.pending and 'pending' or ''}",
       @props.hook? and e 'button',

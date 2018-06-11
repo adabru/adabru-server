@@ -9,13 +9,13 @@ to_string = (stream, cb) ->
   stream.on "data", (c) -> chunks.push c
   stream.on "end", -> cb Buffer.concat(chunks).toString('utf-8')
 escaped_regex = (s) -> new RegExp(s.replace /[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-run_hook = ({name, path, commands}, callback) ->
+run_hook = ({name, path, env, commands}, callback) ->
   state.hook[name] = lines: (commands?.split '\n' or []).filter((line) -> line.trim! isnt '').map (command) -> ({command})
   run = ->
     line = state.hook[name].lines.find ({code}) -> not code?
     if not line? then return callback!
     line <<< {output:[], tstart:Date.now!}
-    cp = child_process.spawn 'sh', ['-c', line.command], cwd:path
+    cp = child_process.spawn 'sh', ['-c', line.command], cwd:path, env:({} <<< process.env <<< env)
     cp.stdout.setEncoding('utf8').on 'data', (data) -> line.output.push {fid:1, data}
     cp.stderr.setEncoding('utf8').on 'data', (data) -> line.output.push {fid:2, data}
     cp.on 'close', (code) ->
@@ -34,7 +34,7 @@ update_processes = (thresholdtime, callback) ->
         if not pid? then return y!
         console.log "restarting #k"
         <- supervisor.terminate pid, _
-        state.pid[k] = (supervisor.start {logname:k, p.script, p.args, config.env, p.cwd, logport:config.env.logport}).pid
+        state.pid[k] = (supervisor.start {logname:k, p.script, p.args, config.vars, p.cwd, p.env, logport:config.vars.logport}).pid
         saveState!
         y!
   (e) <- callme _, Promise.all restarts
@@ -42,7 +42,7 @@ update_processes = (thresholdtime, callback) ->
   # restart ci (current process)
   if fs.statSync('./.build/ci.js').mtime.getTime! > thresholdtime
     console.log "restarting"
-    supervisor.start {logname:'ci', command:'sh', args:['-c', "while [ -e /proc/#{process.pid} ] ; do sleep .2; done ; #{process.argv.join ' '} &"], logport:config.env.logport}
+    supervisor.start {logname:'ci', command:'sh', args:['-c', "while [ -e /proc/#{process.pid} ] ; do sleep .2; done ; #{process.argv.join ' '} &"], logport:config.vars.logport}
     process.exit!
   else callback!
 
@@ -93,7 +93,7 @@ http.createServer (req, res) ->
           else answer 200
         t0 = Date.now!
         busy := true
-        <- run_hook {name, wh.path, commands:"git pull\n#{wh.commands}"}, _
+        <- run_hook {name, wh.path, wh.env, commands:"git pull\n#{wh.commands}"}, _
         update_processes t0, -> busy := false
       case req.url is '/ls'
         queries =  Object.entries(config.processes).map ([k, p]) -> new Promise (y, n) ->
@@ -110,7 +110,7 @@ http.createServer (req, res) ->
           answer 500, e.stack
         else
           answer 200, JSON.stringify do
-            ps: [...values, {name:'ci', status:'running', process.pid, ports:[config.env.ciport]}]
+            ps: [...values, {name:'ci', status:'running', process.pid, ports:[config.vars.ciport]}]
             hooks: Object.entries(state.hook).map ([k, h]) -> h <<< name:k
       case req.url is /\/start\//
         name = /[^\/]+$/.exec(req.url).0
@@ -119,7 +119,7 @@ http.createServer (req, res) ->
         console.log "starting #name"
         pid = state.pid[name]
         if pid? then return answer 200, "#name already running"
-        state.pid[name] = supervisor.start {logname:name, p.script, p.args, config.env, p.cwd, logport:config.env.logport}
+        state.pid[name] = supervisor.start {logname:name, p.script, p.args, config.vars, p.cwd, p.env, logport:config.vars.logport}
           .on 'error', (e) -> console.error e.stack
           .pid
         saveState!
@@ -147,4 +147,4 @@ http.createServer (req, res) ->
         answer 404, "not found"
   catch e
     answer 500, e.stack
-.listen config.env.ciport, '::1', -> console.log "continuous integration server running on http://[::1]:#{config.env.ciport}"
+.listen config.vars.ciport, '::1', -> console.log "continuous integration server running on http://[::1]:#{config.vars.ciport}"
