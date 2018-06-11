@@ -54,6 +54,7 @@ catch e
   console.error e
   process.exit -1
 supervisor = require './supervisor.js'
+try fs.mkdirSync './.cache'
 try state = JSON.parse fs.readFileSync './.cache/ci_state.json'
 state = {pid:{},hook:{}} <<< state
 state.pid['ci'] = process.pid
