@@ -263,7 +263,7 @@ man systemd.resource-control
   - logging (↑logpipe.ls ↑logserver.ls)
 
     ```
-    node test_log.js
+    node .build/test_log.js
     ```
 |Debug|
   - processes log via ↑logpipe.js , to see output:
