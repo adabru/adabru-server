@@ -20,10 +20,12 @@ start_router = (host, port, cb) ->
 
     options = {host: '::1', port: routes[r], path: req.url, req.headers, req.method}
     p_req = http.request options, (p_res) ->
-      # disabled deflate to avoid problems see e.g. https://github.com/expressjs/compression/issues/25
+      # no deflate support to avoid problems see e.g. https://github.com/expressjs/compression/issues/25
       if not p_res.headers['content-encoding']?
+        and not p_res.headers['transfer-encoding']?
         and /gzip/.test(req.headers['accept-encoding'])
         and /^(text|application)/.test(p_res.headers['content-type'])
+          delete p_res.headers['content-length']
           p_res.headers['content-encoding'] = 'gzip'
           res_body = p_res.pipe(zlib.createGzip())
       else
