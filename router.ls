@@ -53,7 +53,10 @@ heartbeat = ->
   else if (state.mtime.key isnt mtime.key) or (state.mtime.cert isnt mtime.cert)
     console.log 'reloading SSL certificate'
     state.mtime = mtime
-    state.router.close -> state.router = start_router host, port, ->
+    # see https://stackoverflow.com/a/36830072/6040478
+    state.router.close!
+    setImmediate ->
+      state.router = start_router host, port, ->
 
 # 80 → 443 redirect
 http.createServer (req, res) ->
