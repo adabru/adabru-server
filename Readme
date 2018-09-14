@@ -265,6 +265,11 @@ man systemd.resource-control
     ```
     node .build/test_log.js
     ```
+  - routing (↑router.ls)
+
+    ```
+    node .build/test_router.js
+    ```
 |Debug|
   - processes log via ↑logpipe.js , to see output:
 
@@ -297,3 +302,7 @@ man systemd.resource-control
     ```
     curl -H x-gitlab-token:abc [::1]:7501/webhook/infoaghh
     ```
+
+
+
+

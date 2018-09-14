@@ -13,7 +13,8 @@ start_router = (host, port, cb) ->
     cert: fs.readFileSync './.config/cert.pem'
   https.createServer signing, (req, res) ->
     href = req.headers.host + req.url
-    r = Object.keys(routes).find (r) -> (new RegExp r).test req.headers.host + req.url
+    if process.env.DEBUG then console.log "#{req.method} #href"
+    r = Object.keys(routes).find (r) -> (new RegExp r).test href
     if not r?
       res.writeHead 200, 'Content-Type': 'text/plain'
       return res.end 'no route defined for this url'
@@ -37,6 +38,40 @@ start_router = (host, port, cb) ->
       res.writeHead 500
       res.end!
     req.pipe p_req
+  .on 'upgrade', (req, sock, head) ->
+    # websocket proxy
+    #   rfc https://tools.ietf.org/html/rfc6455
+    #   code derived from https://github.com/nodejitsu/node-http-proxy
+    href = req.headers.host + req.url
+    if process.env.DEBUG then console.log "#{req.method} #href"
+    r = Object.keys(routes).find (r) -> (new RegExp r).test href
+    if not r?
+      sock.write 'HTTP/1.1 200 Ok\r\n'+
+                 'Content-Type: text/plain\r\n'+
+                 '\r\n'+
+                 'no route defined for this url'
+    options = {host: '::1', port: routes[r], path: req.url, req.headers, req.method}
+    p_req = http.request options, (p_res) ->
+      if not p_res.upgrade
+        sock.write "HTTP/#{p_res.httpVersion} #{p_res.statusCode} #{p_res.statusMessage}\r\n"+
+                   "#{Object.entries(p_res.headers).map(([k,v]) -> k+': '+v).join('\r\n')}\r\n\r\n"
+        p_res.pipe sock
+    p_req.on 'error', (e) ->
+      console.error "problem with service on port #{routes[r]}: #{e.message}"
+      sock.end!
+    p_req.on 'upgrade', (p_res, p_sock, p_head) ->
+      p_sock.on 'error', (e) ->
+        console.error "ws-problem with service on port #{routes[r]}: #{e.message}"
+        sock.end!
+      sock.on 'error', (e) ->
+        console.error "ws-problem with client connected to #{href}: #{e.message}"
+        p_sock.end!
+      [sock, p_sock].map (s) -> s.setNoDelay true ; s.setKeepAlive(true, 0)
+      sock.write "HTTP/1.1 101 Switching Protocols\r\n"+
+                 "#{Object.entries(p_res.headers).map(([k,v]) -> k+': '+v).join('\r\n')}\r\n\r\n"
+      sock.unshift head ; sock.pipe p_sock
+      p_sock.unshift p_head ; p_sock.pipe(sock)
+    p_req.end!
   .listen port, host, cb
 
 # old certificates remain valid:
@@ -60,7 +95,7 @@ heartbeat = ->
 
 # 80 → 443 redirect
 http.createServer (req, res) ->
-  res.writeHead 302, 'location': "https://#{/[^:]*/.exec(req.headers['host']).0}:#{http_redirect.to}#{req.url}"
+  res.writeHead 302, 'location': "https://#{/(\[.*?\])|[^:]*/.exec(req.headers['host']).0}:#{http_redirect.to}#{req.url}"
   res.end!
 .listen http_redirect.from, host, -> console.log "http redirecting from http://#{host}:#{http_redirect.from}"
 
