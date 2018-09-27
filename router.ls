@@ -2,7 +2,7 @@
 require! [fs, https, http, net, url, zlib]
 
 {http_redirect, port, routes, host} = JSON.parse process.argv.2
-
+routesSorted = (Object.keys routes) .sort (u,v) -> v.length - u.length
 
 host ?= '::1'
 $ = http_redirect ; http_redirect = {} ; [, http_redirect.from, http_redirect.to] = /(.*)->(.*)/.exec $
@@ -14,7 +14,7 @@ start_router = (host, port, cb) ->
   https.createServer signing, (req, res) ->
     href = req.headers.host + req.url
     if process.env.DEBUG then console.log "#{req.method} #href"
-    r = Object.keys(routes).find (r) -> (new RegExp r).test href
+    r = routesSorted.find (r) -> (new RegExp r).test href
     if not r?
       res.writeHead 200, 'Content-Type': 'text/plain'
       return res.end 'no route defined for this url'
