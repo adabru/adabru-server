@@ -36,7 +36,7 @@ print_log = (log) ->
   pad = (s) -> "  #s".substr -2
   console.log log.map((line) ->
     d = new Date line.d
-    m = ['Jan' 'Feb' 'Mar' 'Apr' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec']
+    m = ['Jan' 'Feb' 'Mar' 'Apr' 'May' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec']
     dt = Date.now! - d.getTime!
     diff = switch
       case dt <           99*1000 then "#{pad Math.round dt                      / 1000}s"
@@ -46,7 +46,7 @@ print_log = (log) ->
       case dt <  35*24*60*60*1000 then "#{pad Math.round dt   / 7 / 24 / 60 / 60 / 1000}w"
       case dt < 300*24*60*60*1000 then "#{pad Math.round dt  / 30 / 24 / 60 / 60 / 1000}m"
       case dt <          Infinity then "#{pad Math.round dt / 365 / 24 / 60 / 60 / 1000}y"
-    "\033[34m#{d.getUTCFullYear!} #{m[d.getUTCMonth!-1]} #{pad d.getUTCDate!} \033[2m#{pad d.getUTCHours!}\033[22m#{pad d.getHours!}:#{pad d.getUTCMinutes!}:#{pad d.getUTCSeconds!}\033[39m \033[33m\033[2m#{diff}\033[22m\033[39m #{line.s.trimRight!}"
+    "\033[34m#{d.getUTCFullYear!} #{m[d.getUTCMonth!]} #{pad d.getUTCDate!} \033[2m#{pad d.getUTCHours!}\033[22m#{pad d.getHours!}:#{pad d.getUTCMinutes!}:#{pad d.getUTCSeconds!}\033[39m \033[33m\033[2m#{diff}\033[22m\033[39m #{line.s.trimRight!}"
   ).join '\n'
 print_process = (p) ->
   s = "\033[1m#{p.name}\033[22m"
