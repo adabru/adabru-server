@@ -120,7 +120,7 @@ http.createServer (req, res) ->
         console.log "starting #name"
         pid = state.pid[name]
         if pid? then return answer 200, "#name already running"
-        state.pid[name] = supervisor.start {logname:name, p.script, p.args, config.vars, p.cwd, p.env, logport:config.vars.logport}
+        state.pid[name] = supervisor.start {logname:name, p.script, p.command, p.args, config.vars, p.cwd, p.env, logport:config.vars.logport}
           .on 'error', (e) -> console.error e.stack
           .pid
         saveState!

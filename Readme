@@ -184,7 +184,7 @@ Services are organised in separate node processes communicating via pipes, tcp a
 
 |resource|limit
 |memory|low+high+max limit
-|disk|device partitioning
+|disk|size+io limit
 |cpu|fair scheduler
 |network|fair scheduler
 
