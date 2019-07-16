@@ -3,5 +3,6 @@ node_modules/
 .config/
 !.config/_config.json
 .cache/
+yarn.lock
 
 absh.ls
