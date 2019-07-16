@@ -1,6 +1,6 @@
 {
-  "env": {
-    "routerport": 7500,
+  "vars": {
+    "routerport": 8443,
     "ciport": 7501,
     "logport": 7502,
     "logbackendport": 7503,
@@ -11,10 +11,11 @@
       "script": "./.build/router.js",
       "args": {
         "port": "${routerport}",
-        "http_redirect": "7080->${routerport}",
+        "http_redirect": "8080->443",
         "routes": {
-          "localhost(:[0-9]+)?/admin": "${dashboardport}"
-        }
+          "^.*?/admin": "${dashboardport}"
+        },
+	"host": "::1"
       }
     },
     "log": {
