@@ -20,6 +20,7 @@ start_router = (host, port, cb) ->
       return res.end 'no route defined for this url'
 
     options = {host: '::1', port: routes[r], path: req.url, req.headers, req.method}
+    piping_p_res = false
     p_req = http.request options, (p_res) ->
       # no deflate support to avoid problems see e.g. https://github.com/expressjs/compression/issues/25
       if not p_res.headers['content-encoding']?
@@ -33,10 +34,11 @@ start_router = (host, port, cb) ->
       else
         res_body = p_res
       res.writeHead p_res.statusCode, p_res.headers
+      piping_p_res = true
       res_body.pipe res
     p_req.on 'error', (e) ->
       console.error "problem with service on port #{routes[r]}: #{e.message}"
-      if res.writable
+      if res.writable and not piping_p_res
         if not res.headersSent
           res.writeHead 500
         res.end!
