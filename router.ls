@@ -36,9 +36,10 @@ start_router = (host, port, cb) ->
       res_body.pipe res
     p_req.on 'error', (e) ->
       console.error "problem with service on port #{routes[r]}: #{e.message}"
-      if not res.headersSent and res.writable
-        res.writeHead 500
-      res.end!
+      if res.writable
+        if not res.headersSent
+          res.writeHead 500
+        res.end!
     req.pipe p_req
   .on 'upgrade', (req, sock, head) ->
     # websocket proxy
