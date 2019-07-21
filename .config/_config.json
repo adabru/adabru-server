@@ -4,20 +4,10 @@
     "ciport": 7501,
     "logport": 7502,
     "logbackendport": 7503,
-    "dashboardport": 7504
+    "dashboardport": 7504,
+    "certbotport": "7505"
   },
   "processes": {
-    "router": {
-      "script": "./.build/router.js",
-      "args": {
-        "port": "${routerport}",
-        "http_redirect": "8080->443",
-        "routes": {
-          "^.*?/admin": "${dashboardport}"
-        },
-	"host": "::1"
-      }
-    },
     "log": {
       "script": "./.build/logserver.js",
       "args": [
@@ -33,12 +23,31 @@
         "logbackendport": "${logbackendport}",
         "token": "abc123"
       }
+    },
+    "certbot": {
+      "args": "${certbotport}",
+      "cwd": "../certbot",
+      "script": "../certbot/server.js"
+    },
+    "router": {
+      "script": "./.build/router.js",
+      "args": {
+        "port": "${routerport}",
+        "http_redirect": "8080->443",
+        "routes": {
+          "^.*?/admin": "${dashboardport}",
+          "^.*?/.well-known/acme-challenge": "${certbotport}",
+          "^.*?/webhook/": "${ciport}"
+        },
+        "host": "::1"
+      }
     }
   },
   "webhooks": {
     "adabru-server": {
-      "token": "123",
-      "path": "."
+      "token": "abc123",
+      "path": ".",
+      "commands": "for f in *.ls; do if [ \"$f\" -nt \".build/${f%.ls}.js\" ] ; then lsc -o .build -c \"$f\" ; fi ; done\nstylus -o ./.build .\nwebpack --mode=production\n"
     }
   }
 }
