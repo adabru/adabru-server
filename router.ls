@@ -34,7 +34,7 @@ start_router = (host, port, cb) ->
       else
         res_body = p_res
       res.writeHead p_res.statusCode, p_res.headers
-      piping_p_res = true
+      piping_p_res := true
       res_body.pipe res
     p_req.on 'error', (e) ->
       console.error "problem with service on port #{routes[r]}: #{e.message}"
