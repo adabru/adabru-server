@@ -35,9 +35,9 @@
         "port": "${routerport}",
         "http_redirect": "8080->443",
         "routes": {
-          "^.*?/admin": "${dashboardport}",
-          "^.*?/.well-known/acme-challenge": "${certbotport}",
-          "^.*?/webhook/": "${ciport}"
+          "^[^/]*/admin": "${dashboardport}",
+          "^[^/]*/.well-known/acme-challenge": "${certbotport}",
+          "^[^/]*/webhook/": "${ciport}"
         },
         "host": "::1"
       }
