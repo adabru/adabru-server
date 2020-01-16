@@ -39,7 +39,7 @@
           "^[^/]*/.well-known/acme-challenge": "${certbotport}",
           "^[^/]*/webhook/": "${ciport}"
         },
-        "host": "::1"
+        "host": "::"
       }
     }
   },
