@@ -27,6 +27,7 @@ update_processes = (thresholdtime, callback) ->
   for k in Object.keys(config.processes)
     if k is 'ci' then continue
     p = config.processes[k]
+    if not p.script? then continue
     if fs.statSync(p.script).mtime.getTime! <= thresholdtime then continue
     let k=k, p=p
       restarts.push new Promise (y,n) ->
