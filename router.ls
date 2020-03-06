@@ -26,7 +26,7 @@ start_router = (host, port, cb) ->
       if not p_res.headers['content-encoding']?
         and not p_res.headers['transfer-encoding']?
         and /gzip/.test(req.headers['accept-encoding'])
-        and /^(text|application)/.test(p_res.headers['content-type'])
+        and /^(text|application|image\/svg+xml)/.test(p_res.headers['content-type'])
         and not /^application\/(zip|gzip)/.test(p_res.headers['content-type'])
           delete p_res.headers['content-length']
           p_res.headers['content-encoding'] = 'gzip'
