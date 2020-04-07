@@ -1,6 +1,6 @@
 #!/usr/bin/env lsc
 
-require! [http,child_process,fs]
+require! [http,child_process,fs,util]
 
 help = -> console.log '''
 
@@ -60,6 +60,7 @@ print_process = (p) ->
 (res, code) <- fetch "ci", config.vars.ciport, "/ls", _
 m = (regex) -> new RegExp("^#{regex.source}$").test process.argv.2 + if process.argv.3? then " #that" else ''
 if res? then (switch
+  # valid response
   |m /ls/
     (res) <- fetch "ci", config.vars.ciport, "/ls", _
     {ps} = JSON.parse res
@@ -92,9 +93,18 @@ if res? then (switch
       print_log JSON.parse res
     else
       console.log res, status
+  |m /config/
+    console.log util.inspect config, depth: Infinity, colors: process.stdout.isTTY
+  |m /config .+/
+    (res, status) <- fetch "ci", config.vars.ciport, '/' + process.argv.slice(2).join('/'), _
+    if status is 200
+      console.log util.inspect (JSON.parse res), depth: Infinity, colors: process.stdout.isTTY
+    else
+      console.log res
   |m /.*/
     help!
 ) else (switch
+  # ci not started yet
   |m /start( ci)?/ then fallthrough
   |m /restart( ci)?/
     console.log "ci started with PID #{supervisor.start({logname:'ci', script:'./.build/ci.js', args:'./.config/config.json', logport:config.vars.logport}).pid}"
@@ -102,7 +112,8 @@ if res? then (switch
   |m /start .+/ then fallthrough
   |m /stop( ci)?/ then fallthrough
   |m /stop .+/ then fallthrough
-  |m /restart .+/
+  |m /restart .+/ then fallthrough
+  |m /config .+/
     console.error '\033[31mci is not running. Start it with \033[1mcli start [ci]\033[22m.\033[39m'
   |m /log .+/
     (res, status) <- fetch "log", config.vars.logbackendport, "/#{process.argv.3}", _
@@ -110,6 +121,8 @@ if res? then (switch
       print_log JSON.parse res
     else
       console.log res, status
+  |m /config/
+    console.log util.inspect config, depth: Infinity, colors: process.stdout.isTTY
   |m /.*/
     help!
 )

@@ -1,7 +1,7 @@
 
 require! [livescript,http,path,child_process,fs,stream,crypto]
 
-config_path = process.argv.2
+configPath = process.argv.2
 
 callme = (callback, promise) -> promise.then((d)->callback void, d).catch((e)->callback e, d)
 to_string = (stream, cb) ->
@@ -50,7 +50,7 @@ update_processes = (thresholdtime, callback) ->
 saveState = ->
   fs.writeFileSync './.cache/ci_state.json', JSON.stringify state
 
-try config = JSON.parse fs.readFileSync config_path
+try config = JSON.parse fs.readFileSync configPath
 catch e
   console.error e
   process.exit -1
@@ -76,15 +76,16 @@ validate_webhook = (req, token, restart, cb) ->
 busy = false
 http.createServer (req, res) ->
   answer = (code, message, headers=null) -> res.writeHead code, headers ; res.end message
+  m = (regex) -> new RegExp("^#{regex.source}$").test req.url
   try
     switch
       # for debugging
-      case req.url is '/update'
+      |m /\/update/
         update_processes 0
-      case req.url is '/'
+      |m /\//
         # ping
         answer 200, "ci running"
-      case req.url is /\/webhook\/([^\/]+)(\/restart)?$/
+      |m /\/webhook\/([^\/]+)(\/restart)?/
         [,name,restart] = /\/webhook\/([^\/]+)(\/restart)?$/.exec req.url
         wh = config.webhooks[name]
         if not wh? then return answer 404, 'hook does not exist'
@@ -97,7 +98,7 @@ http.createServer (req, res) ->
         busy := true
         <- run_hook {name, wh.path, wh.env, commands:"git pull\n#{wh.commands}"}, _
         update_processes t0, -> busy := false
-      case req.url is '/ls'
+      |m /\/ls/
         queries =  Object.entries(config.processes).map ([k, p]) -> new Promise (y, n) ->
           res = name:k
           pid = state.pid[k]
@@ -114,7 +115,7 @@ http.createServer (req, res) ->
           answer 200, JSON.stringify do
             ps: [...values, {name:'ci', status:'running', process.pid, ports:[config.vars.ciport]}]
             hooks: Object.entries(state.hook).map ([k, h]) -> h <<< name:k
-      case req.url is /\/start\//
+      |m /\/start\/.+/
         name = /[^\/]+$/.exec(req.url).0
         if not (p = config.processes[name])?
           return answer 404, "process #name not found!"
@@ -126,7 +127,7 @@ http.createServer (req, res) ->
           .pid
         saveState!
         answer 200, "#name started"
-      case req.url is /\/stop\//
+      |m /\/stop\/.+/
         name = /[^\/]+$/.exec(req.url).0
         if not (p = config.processes[name])?
           return answer 404, "process #name not found!"
@@ -136,15 +137,35 @@ http.createServer (req, res) ->
         saveState!
         <- supervisor.terminate pid, _
         answer 200, "#name stopped"
-      case req.url is '/config'
+      |m /\/config/
         if req.method is 'GET'
           answer 200, JSON.stringify config
         else /*PUT*/
           (body) <- to_string req, _
           config := JSON.parse body
-          e <- fs.writeFile config_path, (JSON.stringify config, ' ', 2), _
+          e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
           if e? then answer 500, "could not write config: #{e.stack}"
           else  then answer 200, "config updated"
+      |m /\/config\/[^\/]+/
+        field = /[^\/]+$/.exec(req.url).0
+        answer 200, JSON.stringify config[field]
+      |m /\/config\/[^\/]+\/(get|update|delete)\/[^\/]+/
+        [_, field, method, key] = /\/config\/([^\/]+)\/(get|update|delete)\/([^\/]+)/.exec(req.url)
+        if method is 'get' and config[field]?[key]?
+          answer 200, JSON.stringify config[field][key]
+        else if method is 'delete' and config[field]?[key]?
+          delete config[field][key]
+          e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
+          if e? then answer 500, "could not write config: #{e.stack}"
+          else  then answer 200, "config updated"
+        else if method is 'update'
+          (body) <- to_string req, _
+          config[field][key] := JSON.parse body
+          e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
+          if e? then answer 500, "could not write config: #{e.stack}"
+          else  then answer 200, "config updated"
+        else
+          answer 400, "#{key} not found in #{field}"
       default
         answer 404, "not found"
   catch e
