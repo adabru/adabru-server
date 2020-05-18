@@ -17,21 +17,21 @@ start_router = (host, port, cb) ->
   https.createServer signing, (req, res) ->
     href = req.headers.host + req.url
     if process.env.DEBUG then console.log "#{req.method} #href"
-    r = routesSorted.find (r) -> (new RegExp r).test href
+    r = webrootsSorted.find (r) -> href.startsWith(r) and (href.length is r.length or href[r.length] is '/')
     if r?
-      port_forward := routes[r]
-    else
-      r = webrootsSorted.find (r) -> href.startsWith(r) and (href.length is r.length or href[r.length] is '/')
       if href.length is r.length
         # redirect to / so that html links don't break
         res.writeHead 302, 'location': "https://#{href}/"
         return res.end!
+      # rewrite path
+      req.url = href.substr r.length
+      if req.url is ''
+        req.url = '/'
+      port_forward := webroots[r]
+    else
+      r = routesSorted.find (r) -> (new RegExp r).test href
       if r?
-        # rewrite path
-        req.url = href.substr r.length
-        if req.url is ''
-          req.url = '/'
-        port_forward := webroots[r]
+        port_forward := routes[r]
       else
         res.writeHead 200, 'Content-Type': 'text/plain'
         return res.end 'no route defined for this url'
