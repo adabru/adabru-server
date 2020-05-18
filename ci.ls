@@ -146,26 +146,6 @@ http.createServer (req, res) ->
           e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
           if e? then answer 500, "could not write config: #{e.stack}"
           else  then answer 200, "config updated"
-      |m /\/config\/[^\/]+/
-        field = /[^\/]+$/.exec(req.url).0
-        answer 200, JSON.stringify config[field]
-      |m /\/config\/[^\/]+\/(get|update|delete)\/[^\/]+/
-        [_, field, method, key] = /\/config\/([^\/]+)\/(get|update|delete)\/([^\/]+)/.exec(req.url)
-        if method is 'get' and config[field]?[key]?
-          answer 200, JSON.stringify config[field][key]
-        else if method is 'delete' and config[field]?[key]?
-          delete config[field][key]
-          e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
-          if e? then answer 500, "could not write config: #{e.stack}"
-          else  then answer 200, "config updated"
-        else if method is 'update'
-          (body) <- to_string req, _
-          config[field][key] := JSON.parse body
-          e <- fs.writeFile configPath, (JSON.stringify config, ' ', 2), _
-          if e? then answer 500, "could not write config: #{e.stack}"
-          else  then answer 200, "config updated"
-        else
-          answer 400, "#{key} not found in #{field}"
       default
         answer 404, "not found"
   catch e

@@ -1,11 +1,14 @@
 
 require! [fs, https, http, net, url, zlib]
 
-{http_redirect, port, routes, host} = JSON.parse process.argv.2
+{http_redirect, port, routes, webroots, host} = JSON.parse process.argv.2
+webrootsSorted = (Object.keys webroots) .sort (u,v) -> v.length - u.length
 routesSorted = (Object.keys routes) .sort (u,v) -> v.length - u.length
 
 host ?= '::1'
 $ = http_redirect ; http_redirect = {} ; [, http_redirect.from, http_redirect.to] = /(.*)->(.*)/.exec $
+
+port_forward = null
 
 start_router = (host, port, cb) ->
   signing =
@@ -15,11 +18,21 @@ start_router = (host, port, cb) ->
     href = req.headers.host + req.url
     if process.env.DEBUG then console.log "#{req.method} #href"
     r = routesSorted.find (r) -> (new RegExp r).test href
-    if not r?
-      res.writeHead 200, 'Content-Type': 'text/plain'
-      return res.end 'no route defined for this url'
+    if r?
+      port_forward := routes[r]
+    else
+      r = webrootsSorted.find (r) -> href.startsWith(r) and (href.length is r.length or href[r.length] is '/')
+      if r?
+        # rewrite path
+        req.url = href.substr r.length
+        if req.url is ''
+          req.url = '/'
+        port_forward := webroots[r]
+      else
+        res.writeHead 200, 'Content-Type': 'text/plain'
+        return res.end 'no route defined for this url'
 
-    options = {host: '::1', port: routes[r], path: req.url, req.headers, req.method}
+    options = {host: '::1', port: port_forward, path: req.url, req.headers, req.method}
     piping_p_res = false
     p_req = http.request options, (p_res) ->
       # no deflate support to avoid problems see e.g. https://github.com/expressjs/compression/issues/25
@@ -37,7 +50,7 @@ start_router = (host, port, cb) ->
       piping_p_res := true
       res_body.pipe res
     p_req.on 'error', (e) ->
-      console.error "problem with service on port #{routes[r]}: #{e.message}"
+      console.error "problem with service on port #{port_forward}: #{e.message}"
       if res.writable and not piping_p_res
         if not res.headersSent
           res.writeHead 500
@@ -62,11 +75,11 @@ start_router = (host, port, cb) ->
                    "#{Object.entries(p_res.headers).map(([k,v]) -> k+': '+v).join('\r\n')}\r\n\r\n"
         p_res.pipe sock
     p_req.on 'error', (e) ->
-      console.error "problem with service on port #{routes[r]}: #{e.message}"
+      console.error "problem with service on port #{port_forward}: #{e.message}"
       sock.end!
     p_req.on 'upgrade', (p_res, p_sock, p_head) ->
       p_sock.on 'error', (e) ->
-        console.error "ws-problem with service on port #{routes[r]}: #{e.message}"
+        console.error "ws-problem with service on port #{port_forward}: #{e.message}"
         sock.end!
       sock.on 'error', (e) ->
         console.error "ws-problem with client connected to #{href}: #{e.message}"
