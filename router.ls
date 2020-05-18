@@ -22,6 +22,10 @@ start_router = (host, port, cb) ->
       port_forward := routes[r]
     else
       r = webrootsSorted.find (r) -> href.startsWith(r) and (href.length is r.length or href[r.length] is '/')
+      if href.length is r.length
+        # redirect to / so that html links don't break
+        res.writeHead 302, 'location': "https://#{href}/"
+        return res.end!
       if r?
         # rewrite path
         req.url = href.substr r.length

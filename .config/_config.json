@@ -39,6 +39,9 @@
           "^[^/]*/.well-known/acme-challenge": "${certbotport}",
           "^[^/]*/webhook/": "${ciport}"
         },
+        "webroots": {
+          "localhost/some/service": 8000
+        },
         "host": "::"
       }
     }
