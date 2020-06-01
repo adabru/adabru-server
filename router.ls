@@ -41,7 +41,6 @@ start_router = (host, port, cb) ->
     p_req = http.request options, (p_res) ->
       # no deflate support to avoid problems see e.g. https://github.com/expressjs/compression/issues/25
       if not p_res.headers['content-encoding']?
-        and not p_res.headers['transfer-encoding']?
         and /gzip/.test(req.headers['accept-encoding'])
         and /^(text|application|image\/svg+xml)/.test(p_res.headers['content-type'])
         and not /^application\/(zip|gzip)/.test(p_res.headers['content-type'])

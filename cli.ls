@@ -17,7 +17,7 @@ help = -> console.log '''
 
   \033[1mlog\033[0m [name]
 
-  \033[1mconfig\033[0m [processes|vars|webhooks] [get key|set key value]
+  \033[1mconfig\033[0m [p|processes|v|vars|w|webhooks] [get key|set key value]
 
 '''
 
@@ -104,6 +104,9 @@ if res? then (switch
     printJson config
   |m /config .+/
     [_, field, method, key] = process.argv.slice(2)
+    if field is 'p' then field = 'processes'
+    if field is 'v' then field = 'vars'
+    if field is 'w' then field = 'webhooks'
     data = process.argv.slice(6).join ''
     if field is 'update'
       data = method
