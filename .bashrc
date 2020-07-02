@@ -1,8 +1,8 @@
 cli(){
   if [[ -z "$ADABRU_SERVER_HOME" ]] ; then echo "you must set env variable ADABRU_SERVER_HOME!" ; return ; fi
   if [[ $1 == log && -n $2 ]]
-  then (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js $@ | less -r +G)
-  else (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js $@)
+  then (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js "$@" | less -r +G)
+  else (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js "$@")
   fi
 }
 cli_complete(){

@@ -5,7 +5,7 @@
     "logport": 7502,
     "logbackendport": 7503,
     "dashboardport": 7504,
-    "certbotport": "7505"
+    "certbotport": 7505
   },
   "processes": {
     "log": {
