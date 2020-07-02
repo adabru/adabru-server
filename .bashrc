@@ -1,7 +1,8 @@
 cli(){
+  if [[ -z "$ADABRU_SERVER_HOME" ]] ; then echo "you must set env variable ADABRU_SERVER_HOME!" ; return ; fi
   if [[ $1 == log && -n $2 ]]
-  then node ./.build/cli.js $@ | less -r +G
-  else node ./.build/cli.js $@
+  then (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js $@ | less -r +G)
+  else (cd $ADABRU_SERVER_HOME && node $ADABRU_SERVER_HOME/.build/cli.js $@)
   fi
 }
 cli_complete(){
@@ -13,7 +14,7 @@ cli_complete(){
     if [[ ${COMP_WORDS[1]} == config ]] ; then
       COMPREPLY=( $(compgen -W "processes webhooks vars" -- $2) )
     else
-      procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" .config/config.json)
+      procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" $ADABRU_SERVER_HOME/.config/config.json)
       COMPREPLY=( $(compgen -W "$procs ci" -- $2) )
     fi
   fi
