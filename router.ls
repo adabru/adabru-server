@@ -15,25 +15,28 @@ start_router = (host, port, cb) ->
     key: fs.readFileSync './.config/key.pem'
     cert: fs.readFileSync './.config/cert.pem'
   https.createServer signing, (req, res) ->
-    href = req.headers.host + req.url
-    if process.env.DEBUG then console.log "#{req.method} #href"
-    r = webrootsSorted.find (r) -> href.startsWith(r) and (href.length is r.length or href[r.length] is '/')
+    parsed_query = url.parse req.url
+    hostpath = req.headers.host + parsed_query.pathname
+    queryhash = (parsed_query.search ? '') + (parsed_query.hash ? '')
+    if process.env.DEBUG then console.log "#{req.method} #hostpath"
+    r = webrootsSorted.find (r) -> hostpath.startsWith(r) and (hostpath.length is r.length or hostpath[r.length] is '/')
     if r?
-      if href.length is r.length
+      if hostpath.length is r.length
         # redirect to / so that html links don't break
-        res.writeHead 302, 'location': "https://#{href}/"
+        res.writeHead 302, 'location': "https://#{hostpath}/#{queryhash}"
         return res.end!
       # rewrite path
-      req.url = href.substr r.length
-      if req.url is ''
-        req.url = '/'
+      hostpath = hostpath.substr r.length
+      if hostpath is ''
+        hostpath = '/'
+      req.url = hostpath + queryhash
       port_forward := webroots[r]
     else
-      r = routesSorted.find (r) -> (new RegExp r).test href
+      r = routesSorted.find (r) -> (new RegExp r).test hostpath
       if r?
         port_forward := routes[r]
       else
-        res.writeHead 200, 'Content-Type': 'text/plain'
+        res.writeHead 404, 'Content-Type': 'text/plain'
         return res.end 'no route defined for this url'
 
     options = {host: '::1', port: port_forward, path: req.url, req.headers, req.method}
