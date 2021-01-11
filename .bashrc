@@ -11,12 +11,8 @@ cli_complete(){
     COMPREPLY=( $(compgen -W "start stop log ls restart config" -- $2) )
   fi
   if [[ $COMP_CWORD == 2 ]] ; then
-    if [[ ${COMP_WORDS[1]} == config ]] ; then
-      COMPREPLY=( $(compgen -W "processes webhooks vars" -- $2) )
-    else
-      procs=$(perl -ne "/^    \"(.+?)\": \\{/ && print \"\$1\n\"" $ADABRU_SERVER_HOME/.config/config.json)
-      COMPREPLY=( $(compgen -W "$procs ci" -- $2) )
-    fi
+    procs=$(perl -ne "/^  \"(.+?)\": \\{/ && print \"\$1\n\"" $ADABRU_SERVER_HOME/.config/config.json)
+    COMPREPLY=( $(compgen -W "$procs" -- $2) )
   fi
   if [[ $COMP_CWORD == 3 && ${COMP_WORDS[1]} == config ]] ; then
     COMPREPLY=( $(compgen -W "get update delete" -- $2) )

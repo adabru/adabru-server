@@ -1,56 +1,48 @@
 {
-  "vars": {
-    "routerport": 8443,
-    "ciport": 7501,
-    "logport": 7502,
-    "logbackendport": 7503,
-    "dashboardport": 7504,
-    "certbotport": 7505
-  },
-  "processes": {
-    "log": {
-      "script": "./.build/logserver.js",
-      "args": [
-        "${logport}",
-        "${logbackendport}"
-      ]
-    },
-    "dashboard": {
-      "script": "./.build/dashboard.js",
-      "args": {
-        "dashboardport": "${dashboardport}",
-        "ciport": "${ciport}",
-        "logbackendport": "${logbackendport}",
-        "token": "abc123"
-      }
-    },
-    "certbot": {
-      "args": "${certbotport}",
-      "cwd": "../certbot",
-      "script": "../certbot/server.js"
-    },
-    "router": {
-      "script": "./.build/router.js",
-      "args": {
-        "port": "${routerport}",
-        "http_redirect": "8080->443",
-        "routes": {
-          "^[^/]*/admin": "${dashboardport}",
-          "^[^/]*/.well-known/acme-challenge": "${certbotport}",
-          "^[^/]*/webhook/": "${ciport}"
-        },
-        "webroots": {
-          "localhost/some/service": 8000
-        },
-        "host": "::"
-      }
-    }
-  },
-  "webhooks": {
-    "adabru-server": {
+  "ci": {
+    "ports": [7501],
+    "webhook": {
       "token": "abc123",
       "path": ".",
       "commands": "for f in *.ls; do if [ \"$f\" -nt \".build/${f%.ls}.js\" ] ; then lsc -o .build -c \"$f\" ; fi ; done\nstylus -o ./.build .\nwebpack --mode=production\n"
     }
+  },
+  "dashboard": {
+    "script": "./.build/dashboard.js",
+    "args": {
+      "dashboardport": "${.ports.0}",
+      "ciport": "${ci.ports.0}",
+      "logbackendport": "${log.ports.1}",
+      "token": "abc123"
+    },
+    "ports": [7504]
+  },
+  "log": {
+    "script": "./.build/logserver.js",
+    "args": ["${.ports.0}", "${.ports.1}"],
+    "ports": [7502, 7503]
+  },
+  "router": {
+    "script": "./.build/router.js",
+    "args": {
+      "host": "::",
+      "port": "${.ports.0}",
+      "http_redirect": "7080->${.ports.0}",
+      "routes": {
+        "^[^/]*/admin": "${dashboard.ports.0}",
+        "^[^/]*/.well-known/acme-challenge": "${certbot.ports.0}",
+        "^[^/]*/webhook/": "${ci.ports.0}"
+      },
+      "webroots": {
+        "localhost/some/service": 8000
+      }
+    },
+    "ports": [7500]
+  },
+  "certbot": {
+    "args": "${certbot.ports.0}",
+    "cwd": "../certbot",
+    "script": "../certbot/server.js",
+    "ports": [7505]
   }
 }

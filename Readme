@@ -38,43 +38,19 @@
 
 ### Config / Add Service
 
-- ↑.config/config.json :
+- Create a ↑.config/config.json using the template ↑.config/_config.json :
 
   ```
-  {
-    "env": {…},
-    "processes": {…},
-    "webhooks": {…}
-  }
-  ```
+  ```↑ _config.json
 - every service and every hook must be restartable at any time (stateless)
+- instead of using `script` to specify a node.js script you can also use `command` to specify an executable file
 
-|
-|`env`|
-  variables that can be used in the rest of this configuration with `${var}`
-|`processes`|
-  ```
-  "infoaghh": {
-    "script": "../infoaghh/main.js",
-    "cwd": "../infoaghh",
-    "args": ["::1", "${infoagport}"]
-  }
-  ```
+For webhooks:
 
-  - `cwd` optional
-  - `args` can be any JSON object
-|`webhooks`|
-  ```
-  "infoaghh": {
-    "token": "abc123",
-    "path": "../infoaghh",
-    "commands": "npm install\nlsc -c"
-  }
-  ```
+- set webhook path to `https://[ci root url]/webhook/[your service name]`
+- path must lead to a git repo
+- process-scripts that are updated are restarted
 
-  - set webhook path to `https://[ci root url]/webhook/infoaghh`
-  - path must lead to a git repo
-  - process-scripts that are updated are restarted
 
 ### Interfaces
 
@@ -247,6 +223,7 @@ man systemd.resource-control
   stylus -o ./.build -w &
   webpack --mode=development -w &
   . .bashrc
+  export ADABRU_SERVER_HOME="$PWD"
   ```
 |Start| ```
   cli restart ci
@@ -302,7 +279,18 @@ man systemd.resource-control
     ```
     curl -H x-gitlab-token:abc [::1]:7501/webhook/infoaghh
     ```
+  - start ci.ls manually via
 
+    ```
+    node ./.build/ci.js ./.config/config.json
+    ```
+  - start some other service manually:
 
+    ```
+    SERVICE=your service
+    ps -aux | grep $SERVICE
+    cli stop $SERVICE
+    # run commandline for that service
+    ```
 
 

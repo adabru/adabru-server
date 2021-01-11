@@ -65,7 +65,7 @@ class Dashboard extends React.Component
           e 'span', className:"heartbeat phase#{@state.beatPhase}", '♡'
           ...@state.hooks.map (h) ~>
             status = h.lines.some((l) -> l.tstart? and not l.tend?) and 'running'
-              or h.lines.every((l) -> l.code is 0) and 'success' or 'failure'
+              or h.lines.every((l) -> not l.command? or l.code is 0) and 'success' or 'failure'
             e 'button',
               className:"hook #status",
               onClick: ~> @setState showhook: if @state.showhook is h.name then null else h.name,
@@ -115,8 +115,10 @@ class HookView extends React.Component
           @props.heartbeat ~> @setState pending: false
         '💣🏃'
       @props.hook? and e 'div', {},
-        ...@props.hook.lines.map ({command,output,tstart,tend,code}) ->
-          e 'div', {},
+        ...@props.hook.lines.map ({date,command,output,tstart,tend,code}) ->
+          if date? then
+            e 'h3', {}, date
+          else e 'div', {},
             e 'pre', {className: not tstart? and 'due' or not code? and 'running' or code is 0 and 'success' or 'failure'}, command
             e 'time', {}, (not tstart? and '-' or duration (tend or Date.now!) - tstart)
             e 'div', {}, ...(output ? []).map ({fid,data}) ->
@@ -218,8 +220,7 @@ class ProcessConfig extends React.Component
   componentDidUpdate: (prevProps) ->
     dirtyCompare = @state.dirtyCompare
     if prevProps.config isnt @props.config
-      dirtyCompare = JSON.stringify if @props.name isnt 'ci' then @props.config.processes[@props.name]
-        else {} <<< @props.config <<< processes:''
+      dirtyCompare = JSON.stringify @props.config[@props.name]
       @setState {dirtyCompare}
     if not prevProps.config? and @props.config? or not prevProps.expand and @props.expand
       @setState {name:@props.name, json:JSON.parse dirtyCompare}
@@ -238,14 +239,12 @@ class ProcessConfig extends React.Component
             className: dirty and 'unlocked' or 'locked'
             onClick: ~> if dirty
               @setState pending: true
-              if @props.name isnt 'ci'
-                _config = JSON.parse JSON.stringify @props.config
-                delete _config.processes[@props.name]
-                newname = @state.name
-                while newname is '' or _config.processes[newname]? then newname += '_'
-                _config.processes[newname] = @state.json
-              else
-                _config = {} <<< @state.json <<< {processes:@props.config.processes}
+              # ensure unique name
+              _config = JSON.parse JSON.stringify @props.config
+              delete _config[@props.name]
+              newname = @state.name
+              while newname is '' or _config[newname]? then newname += '_'
+              _config[newname] = @state.json
               res <~ fetch(@props.url, method:'PUT', body:JSON.stringify _config) .catch((e) -> Promise.resolve e) .then _
               @update = true
               # component still alive
@@ -259,7 +258,7 @@ class ProcessConfig extends React.Component
             className:'delete',
             onClick: ~>
               _config = JSON.parse JSON.stringify @props.config
-              delete _config.processes[@props.name]
+              delete _config[@props.name]
               fetch(@props.url, method:'PUT', body:JSON.stringify _config) .then ~> @props.heartbeat!
             '🗑'
           e 'button', onClick: @props.toggleExpand, '🗙'
