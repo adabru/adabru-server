@@ -1,39 +1,31 @@
 
 require! [fs,child_process]
+fs = fs.promises
 
 supervisor = new
 
-  @pgrep = (regex, cb) ->
-    ps = fs.readdirSync("/proc").filter (p) -> /^[0-9]+$/.test p
-    count = ps.length
-    f_limit = 50
+  @pgrep = (regex) ->>
+    ps = (await fs.readdir "/proc").filter (p) -> /^[0-9]+$/.test p
     pid = void
-    do get_pid = ->
-      if pid? then return
-      if not (p = ps.pop!)? then return
-      fs.readFile "/proc/#p/cmdline", (e, d) ->
-        if pid? then return
-        if not e? and regex.test(d) then return cb (pid := p)
-        if --count is 0 then return cb void
-        setTimeout -> get_pid!
-      if f_limit-- > 0
-        setTimeout -> get_pid!
+    await Promise.any ps.map (p) ->>
+      if not pid?
+        d = await fs.readFile "/proc/#p/cmdline"
+        if not pid? and regex.test(d)
+          return pid := p
+      throw 'not this one'
 
   # ip6
-  @get_ports = (pid, cb) ->
-    (e,files) <- fs.readdir "/proc/#pid/fd", _
-    if e? then return cb []
-    socket_inodes = []
-    semaphore = new
-      @c = files.length
-      @tick = -> if --@c is 0 then @_next!
-      @next = (cb) -> @_next=cb
-    files.forEach (f) -> fs.stat "/proc/#pid/fd/#f", (e,stats) ->
-      if not e? and stats?.isSocket! then socket_inodes.push stats.ino
-      semaphore.tick!
-    <- semaphore.next _
-    (e,f) <- fs.readFile '/proc/net/tcp6', 'utf8', _
-    cb (f.split '\n'
+  @get_ports = (pid) ->>
+    files = await fs.readdir "/proc/#pid/fd"
+    socket_inodes = await Promise.all files.map (f) ->>
+      try
+        stats = await fs.stat "/proc/#pid/fd/#f"
+        if stats?.isSocket! then return stats.ino
+      catch e
+        void # stat failed
+    socket_inodes = socket_inodes.filter (x) -> x?
+    f = await fs.readFile '/proc/net/tcp6', 'utf8'
+    return (f.split '\n'
       .map (s) -> s.trim!.split /[ \t]+/
       .filter (f) -> parseInt(f.9) in socket_inodes
       .map (f) -> f.1
@@ -54,18 +46,18 @@ supervisor = new
     child_log.stdin.destroy!
     child
 
-  @terminate = (pid, cb) ->
+  @terminate = (pid, cb) ->>
     try
       process.kill pid
     catch e
-      if e.code is "ESRCH" then return cb! else throw e
-    wait_p = ->
-      try
-        fs.statSync "/proc/#pid"
+      if e.code is "ESRCH" then return else throw e
+    try
+      for i in [1 to 50]
+        await fs.stat "/proc/#pid"
         # still alive
-        setTimeout wait_p, 200
-      catch
-        cb!
-    setTimeout wait_p
+        await new Promise (y) -> setTimeout y, 200
+    catch
+      return
+    throw 'process does not die'
 
 exports <<< supervisor
