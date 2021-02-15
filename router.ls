@@ -19,22 +19,23 @@ start_router = (host, port, cb) ->
     hostpath = req.headers.host + parsed_query.pathname
     queryhash = (parsed_query.search ? '') + (parsed_query.hash ? '')
     if process.env.DEBUG then console.log "#{req.method} #hostpath"
-    r = webrootsSorted.find (r) -> hostpath.startsWith(r) and (hostpath.length is r.length or hostpath[r.length] is '/')
+    # prioritize route-match over webroot-match
+    r = routesSorted.find (r) -> (new RegExp r).test hostpath
     if r?
-      if hostpath.length is r.length
-        # redirect to / so that html links don't break
-        res.writeHead 302, 'location': "https://#{hostpath}/#{queryhash}"
-        return res.end!
-      # rewrite path
-      hostpath = hostpath.substr r.length
-      if hostpath is ''
-        hostpath = '/'
-      req.url = hostpath + queryhash
-      port_forward := webroots[r]
+      port_forward := routes[r]
     else
-      r = routesSorted.find (r) -> (new RegExp r).test hostpath
+      r = webrootsSorted.find (r) -> hostpath.startsWith(r) and (hostpath.length is r.length or hostpath[r.length] is '/')
       if r?
-        port_forward := routes[r]
+        if hostpath.length is r.length
+          # redirect to / so that html links don't break
+          res.writeHead 302, 'location': "https://#{hostpath}/#{queryhash}"
+          return res.end!
+        # rewrite path
+        hostpath = hostpath.substr r.length
+        if hostpath is ''
+          hostpath = '/'
+        req.url = hostpath + queryhash
+        port_forward := webroots[r]
       else
         res.writeHead 404, 'Content-Type': 'text/plain'
         return res.end 'no route defined for this url'
